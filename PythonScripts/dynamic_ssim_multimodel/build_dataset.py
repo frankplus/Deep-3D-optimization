@@ -10,11 +10,15 @@ import random
 
 log_dir = "../../logData/noscreenshot/"
 screenshots_path = "../../screenshots/"
-ref_dir = "Owl_high"
 
-# list all directories inside screenshots_path
-dirpath, dirnames, filenames = next(os.walk(screenshots_path))
-dirnames = sorted(filter(lambda dir: dir != ref_dir, dirnames))
+# a dictionary of LOD levels for each 3d model. The key is the reference LOD, value is a list of LOD levels
+models = {
+    "dragon000": ["dragon001", "dragon002", "dragon003"],
+    "notredame000": ["notredame001", "notredame002", "notredame003"],
+    "Owl_high000": ["Owl_high001", "Owl_high002", "Owl_high003"],
+    "temple000": ["temple001", "temple002", "temple003"],
+    "xyzrgb_statuette000": ["xyzrgb_statuette001", "xyzrgb_statuette002", "xyzrgb_statuette003"]
+}
 
 def load_positions():
     with open("../positions.txt", 'r') as f:
@@ -26,19 +30,24 @@ def load_positions():
 
 def generate_samples(positions):
     MAX_DISTANCE = 0.2
-    MAX_NUM_PAIRS = 10000
+    MAX_NUM_PAIRS = 1000
     samples = list()
     for i in range(len(positions)):
         for j in range(i,len(positions)):
             pair = [i,j] 
             random.shuffle(pair)
-            if np.linalg.norm(positions[pair[0]] - positions[pair[1]]) < MAX_DISTANCE:
-                for lod_name in dirnames:
+            if np.linalg.norm(positions[pair[0]] - positions[pair[1]]) > MAX_DISTANCE:
+                continue
+
+            for model in models:
+                for lod_name in models[model]:
                     samples.append({
                         "i": i,
                         "j": j,
+                        "model": model,
                         "lod_name": lod_name
                     })
+
     random.shuffle(samples)
     if len(samples) > MAX_NUM_PAIRS:
         samples = samples[:MAX_NUM_PAIRS]
@@ -83,22 +92,18 @@ def get_lod_stats(lod_name):
     return stats
 
 def generate_dataset(samples):
-    all_stats = dict()
-    for lod in dirnames:
-        all_stats[lod] = get_lod_stats(lod)
-
     dataset = list()
     for i,sample in enumerate(samples):
         print(i)
         path = screenshots_path + sample["lod_name"]
-        path_ref = screenshots_path + ref_dir
+        path_ref = screenshots_path + sample["model"]
         ssim = compute_ssim_from_pair(sample["i"], sample["j"], path, path_ref)
         sample = {
             "pos": positions[sample["i"]].tolist(),
             "pos_ref": positions[sample["j"]].tolist(),
+            "model": sample["model"],
             "lod_name": sample["lod_name"],
             "ssim": ssim,
-            "fps": all_stats[sample["lod_name"]][sample["j"]]["fps"]
         }
         dataset.append(sample)
     return dataset
@@ -126,7 +131,7 @@ samples = generate_samples(positions)
 print(f"{len(samples)} pairs generated")
 
 dataset = {
-    "lod_names": dirnames,
+    "models": models,
     "samples": generate_dataset(samples)
 }
 

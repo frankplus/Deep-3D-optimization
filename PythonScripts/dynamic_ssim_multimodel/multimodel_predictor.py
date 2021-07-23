@@ -7,21 +7,47 @@ import numpy as np
 import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from sklearn.preprocessing import StandardScaler
+from PIL import Image
+from torchvision import transforms
 
 EPOCHS = 5
 
+def load_projections(data, device):
+
+    # loader uses the transforms function that comes with torchvision
+    loader = transforms.Compose([
+        transforms.ToTensor()])  
+
+    # Enter the picture address
+    # Return tensor variable
+    def image_loader(image_name):
+        image = Image.open(image_name).convert('RGB')
+        image = loader(image)
+        return image.to(device, torch.float)
+
+    projections_dir = "projections/"
+    models = data["models"]
+    projections = dict()
+    for model in models:
+        projections[model] = dict()
+        for plane in ["H", "V", "L"]:
+            path = f"{projections_dir}{model}_{plane}.png"
+            projections[model][plane] = image_loader(path)
+            # plt.imshow(projections[model][plane].permute(1,2,0))
+            # plt.show()
+    return projections
+
+
 class SsimDataset(Dataset):
-    def __init__(self):
-        with open("dataset.json", 'r') as f:
-            data = json.load(f)
+    def __init__(self, data):
         self.dataset = list()
         for sample in data["samples"]:
             pos = sample["pos"]
             pos_ref = sample["pos_ref"]
-            lod_id = data["lod_names"].index(sample["lod_name"])
+            model = sample["model"]
+            lod_id = data["models"][model].index(sample["lod_name"])
             ssim = sample["ssim"]
-            fps = sample["fps"] / 100.0
-            self.dataset.append({"input": np.array(pos + pos_ref + [lod_id]), "output": np.array([ssim, fps])})
+            self.dataset.append({"input": np.array(pos + pos_ref + [lod_id]), "output": np.array([ssim])})
 
     def __len__(self):
         return len(self.dataset)
@@ -40,7 +66,7 @@ class NeuralNetwork(nn.Module):
             nn.Linear(hidden_nodes, hidden_nodes),
             nn.ReLU(),
             nn.Dropout(dropout),
-            nn.Linear(hidden_nodes, 2)
+            nn.Linear(hidden_nodes, 1)
         )
 
     def forward(self, x):
@@ -92,7 +118,15 @@ def eval(dataloader, model, loss_fn, device, print_example=False):
     return test_loss
 
 def main():
-    dataset = SsimDataset()
+    # Get cpu or gpu device for training.
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print("Using {} device".format(device))
+
+    with open("dataset.json", 'r') as f:
+        data = json.load(f)
+
+    projections = load_projections(data, device)
+    dataset = SsimDataset(data)
 
     print("example sample")
     print(dataset.__getitem__(0))
@@ -105,10 +139,6 @@ def main():
     eval_dataloader = DataLoader(eval_set, batch_size=4, shuffle=True)
     example_sample = next(iter(train_dataloader))
     print(example_sample)
-
-    # Get cpu or gpu device for training.
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print("Using {} device".format(device))
 
     model = NeuralNetwork().to(device)
     print(model)

@@ -11,7 +11,7 @@ using System.IO;
 
 
 
-public class CameraSnapshot4 : MonoBehaviour
+public class CameraSnapshotAllLod : MonoBehaviour
 {
 
     public int resWidth = 3300;
