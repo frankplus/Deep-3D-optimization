@@ -99,14 +99,13 @@ def train(dataloader, model, loss_fn, optimizer, device):
     size = len(dataloader.dataset)
     train_loss = 0
     for batch, data in enumerate(dataloader):
-        input = data["input"].float()
-        label = data["output"].float()
-        
-        X, y = input.to(device), label.to(device)
+        input = data["input"].to(device, torch.float)
+        projections = data["projections"].to(device, torch.float)
+        label = data["output"].to(device, torch.float)
 
         # Compute prediction error
-        pred = model(X, data["projections"])
-        loss = loss_fn(pred, y)
+        pred = model(input, projections)
+        loss = loss_fn(pred, label)
         train_loss += loss.item()
 
         # Backpropagation
@@ -124,12 +123,12 @@ def eval(dataloader, model, loss_fn, device, print_example=False):
     test_loss = 0
     with torch.no_grad():
         for batch, data in enumerate(dataloader):
-            input = data["input"].float()
-            label = data["output"].float()
+            input = data["input"].to(device, torch.float)
+            projections = data["projections"].to(device, torch.float)
+            label = data["output"].to(device, torch.float)
             
-            X, y = input.to(device), label.to(device)
-            pred = model(X, data["projections"])
-            test_loss += loss_fn(pred, y).item()
+            pred = model(input, projections)
+            test_loss += loss_fn(pred, label).item()
     test_loss /= size
     print(f"Eval avg loss: {test_loss:>8f} \n")
 
@@ -190,13 +189,14 @@ def main():
     plt.show()
 
     # export model
-    dummy_input = (example_sample['input'].float(), example_sample['projections'].float())
-    torch.onnx.export(model,                              # model being run
-                    dummy_input,                       # model dummy input (or a tuple for multiple inputs)
+    dummy_input = (example_sample['input'].to(device, torch.float), 
+                   example_sample['projections'].to(device, torch.float))
+    torch.onnx.export(model,                       # model being run
+                    dummy_input,                   # model dummy input (or a tuple for multiple inputs)
                     "model.onnx",                  # where to save the model (can be a file or file-like object)
-                    export_params=True,                 # store the trained parameter weights inside the model file
-                    opset_version=9,                    # the ONNX version to export the model to
-                    do_constant_folding=True,           # whether to execute constant folding for optimization
+                    export_params=True,            # store the trained parameter weights inside the model file
+                    opset_version=9,               # the ONNX version to export the model to
+                    do_constant_folding=True,      # whether to execute constant folding for optimization
                     input_names = ['input'],  
                     output_names = ['output']
                     )
