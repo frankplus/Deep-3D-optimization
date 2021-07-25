@@ -33,7 +33,7 @@ def load_positions():
 
 def generate_samples(positions):
     MAX_DISTANCE = 0.2
-    MAX_NUM_PAIRS = 5000
+    MAX_NUM_PAIRS = 10000
     samples = list()
     for i in range(len(positions)):
         for j in range(i,len(positions)):
@@ -95,6 +95,11 @@ def get_lod_stats(lod_name):
     return stats
 
 def generate_dataset(samples):
+    all_stats = dict()
+    for model in models:
+        for lod_name in models[model]:
+            all_stats[lod_name] = get_lod_stats(lod_name)
+
     dataset = list()
     for i,sample in enumerate(samples):
         print(i)
@@ -107,6 +112,7 @@ def generate_dataset(samples):
             "model": sample["model"],
             "lod_name": sample["lod_name"],
             "ssim": ssim,
+            "fps": all_stats[sample["lod_name"]][sample["i"]]["fps"]
         }
         dataset.append(sample)
     return dataset

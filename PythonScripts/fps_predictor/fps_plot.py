@@ -58,7 +58,7 @@ def show_distance_fps_plot(stats):
     plt.show()
 
 def show_fps_hists():
-    fig, ax = plt.subplots(4)
+    fig, ax = plt.subplots(len(lod_names))
     for i,lod in enumerate(lod_names):
         stats = get_lod_stats(lod)
         data = list(map(lambda x: x["fps"], stats))
@@ -97,9 +97,21 @@ def print_averages():
             average = sum(data) / len(data)
             print(f"{lod} average {key}: {average}")
 
+def triangle_fps_plot():
+    for lod in lod_names:
+        stats = get_lod_stats(lod)
+        triangle_count = list(map(lambda x: x["triangle_count"], stats))
+        fps = list(map(lambda x: x["fps"], stats))
+        plt.scatter(triangle_count, fps)
+    plt.xlabel("triangle count")
+    plt.ylabel("fps")
+    plt.show()
+        
+
 print_averages()
-show_fps_plots()
-show_fps_hists()
-stats = get_lod_stats(lod_names[0])
-show_2d_fps_plot(stats)
-show_distance_fps_plot(stats)
+triangle_fps_plot()
+# show_fps_plots()
+# show_fps_hists()
+# stats = get_lod_stats(lod_names[0])
+# show_2d_fps_plot(stats)
+# show_distance_fps_plot(stats)

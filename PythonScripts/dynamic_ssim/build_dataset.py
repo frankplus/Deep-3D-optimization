@@ -98,7 +98,7 @@ def generate_dataset(samples):
             "pos_ref": positions[sample["j"]].tolist(),
             "lod_name": sample["lod_name"],
             "ssim": ssim,
-            "fps": all_stats[sample["lod_name"]][sample["j"]]["fps"]
+            "fps": all_stats[sample["lod_name"]][sample["i"]]["fps"]
         }
         dataset.append(sample)
     return dataset

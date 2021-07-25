@@ -48,6 +48,7 @@ class SsimDataset(Dataset):
             model = sample["model"]
             lod_id = data["models"][model].index(sample["lod_name"])
             ssim = sample["ssim"]
+            fps = sample["fps"] / 100.0
             self.dataset.append({"input": np.array(pos + pos_ref + [lod_id]), 
                                 "projections": projections[model], 
                                 "output": np.array([ssim])})
@@ -187,6 +188,18 @@ def main():
     plt.ylabel("MSE")
     plt.legend()
     plt.show()
+
+    # export model
+    dummy_input = (example_sample['input'].float(), example_sample['projections'].float())
+    torch.onnx.export(model,                              # model being run
+                    dummy_input,                       # model dummy input (or a tuple for multiple inputs)
+                    "model.onnx",                  # where to save the model (can be a file or file-like object)
+                    export_params=True,                 # store the trained parameter weights inside the model file
+                    opset_version=9,                    # the ONNX version to export the model to
+                    do_constant_folding=True,           # whether to execute constant folding for optimization
+                    input_names = ['input'],  
+                    output_names = ['output']
+                    )
 
 
 if __name__ == '__main__':
