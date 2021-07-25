@@ -6,8 +6,8 @@ using UnityEngine.Events;
 public class SceneController : MonoBehaviour
 {
 	[Header("Texture settings")]
-	public int Width = 1024;
-	public int Height = 1024;
+	public int Width = 256;
+	public int Height = 256;
 
 	[Header("Raycast settings")]
 	public int MaxHits = 20;

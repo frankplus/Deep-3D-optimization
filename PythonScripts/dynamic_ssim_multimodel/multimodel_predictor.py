@@ -9,6 +9,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from sklearn.preprocessing import StandardScaler
 from PIL import Image
 from torchvision import transforms
+import torch.nn.functional as F
 
 EPOCHS = 5
 
@@ -21,25 +22,25 @@ def load_projections(data, device):
     # Enter the picture address
     # Return tensor variable
     def image_loader(image_name):
-        image = Image.open(image_name).convert('RGB')
+        image = Image.open(image_name).convert('RGB').split()[0]
         image = loader(image)
         return image.to(device, torch.float)
 
-    projections_dir = "projections/"
+    def get_path(model, plane):
+        projections_dir = "projections/"
+        return f"{projections_dir}{model}_{plane}.png"
+
     models = data["models"]
     projections = dict()
     for model in models:
-        projections[model] = dict()
-        for plane in ["H", "V", "L"]:
-            path = f"{projections_dir}{model}_{plane}.png"
-            projections[model][plane] = image_loader(path)
-            # plt.imshow(projections[model][plane].permute(1,2,0))
-            # plt.show()
+        planes = [image_loader(get_path(model, plane)) for plane in ["H", "V", "L"]]
+        tensor = torch.cat(planes, 0)
+        projections[model] = tensor
     return projections
 
 
 class SsimDataset(Dataset):
-    def __init__(self, data):
+    def __init__(self, data, projections):
         self.dataset = list()
         for sample in data["samples"]:
             pos = sample["pos"]
@@ -47,7 +48,9 @@ class SsimDataset(Dataset):
             model = sample["model"]
             lod_id = data["models"][model].index(sample["lod_name"])
             ssim = sample["ssim"]
-            self.dataset.append({"input": np.array(pos + pos_ref + [lod_id]), "output": np.array([ssim])})
+            self.dataset.append({"input": np.array(pos + pos_ref + [lod_id]), 
+                                "projections": projections[model], 
+                                "output": np.array([ssim])})
 
     def __len__(self):
         return len(self.dataset)
@@ -60,7 +63,7 @@ class NeuralNetwork(nn.Module):
         super(NeuralNetwork, self).__init__()
         hidden_nodes = 256
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(7, hidden_nodes),
+            nn.Linear(71, hidden_nodes),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(hidden_nodes, hidden_nodes),
@@ -68,10 +71,28 @@ class NeuralNetwork(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(hidden_nodes, 1)
         )
+        self.cnn = nn.Sequential(
+            nn.Conv2d(3,32,kernel_size=3,padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(4,4),
+            nn.Conv2d(32,64,kernel_size=3,padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(4,4),
+            nn.Conv2d(64,64,kernel_size=3,padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(4,4),
+            nn.Conv2d(64,64,kernel_size=3,padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(4,4),
+            nn.Flatten()
+        )
 
-    def forward(self, x):
-        logits = self.linear_relu_stack(x)
-        return logits
+    def forward(self, x, projections):
+        features = self.cnn(projections)
+        nn_inputs = torch.cat((x, features), 1)
+        # print(nn_inputs.size())
+        output = self.linear_relu_stack(nn_inputs)
+        return output
 
 def train(dataloader, model, loss_fn, optimizer, device):
     size = len(dataloader.dataset)
@@ -83,7 +104,7 @@ def train(dataloader, model, loss_fn, optimizer, device):
         X, y = input.to(device), label.to(device)
 
         # Compute prediction error
-        pred = model(X)
+        pred = model(X, data["projections"])
         loss = loss_fn(pred, y)
         train_loss += loss.item()
 
@@ -106,7 +127,7 @@ def eval(dataloader, model, loss_fn, device, print_example=False):
             label = data["output"].float()
             
             X, y = input.to(device), label.to(device)
-            pred = model(X)
+            pred = model(X, data["projections"])
             test_loss += loss_fn(pred, y).item()
     test_loss /= size
     print(f"Eval avg loss: {test_loss:>8f} \n")
@@ -126,7 +147,7 @@ def main():
         data = json.load(f)
 
     projections = load_projections(data, device)
-    dataset = SsimDataset(data)
+    dataset = SsimDataset(data, projections)
 
     print("example sample")
     print(dataset.__getitem__(0))
@@ -166,17 +187,6 @@ def main():
     plt.ylabel("MSE")
     plt.legend()
     plt.show()
-
-    # export model
-    torch.onnx.export(model,                              # model being run
-                    example_sample['input'].float(),                       # model dummy input (or a tuple for multiple inputs)
-                    "model.onnx",                  # where to save the model (can be a file or file-like object)
-                    export_params=True,                 # store the trained parameter weights inside the model file
-                    opset_version=9,                    # the ONNX version to export the model to
-                    do_constant_folding=True,           # whether to execute constant folding for optimization
-                    input_names = ['input'],  
-                    output_names = ['output']
-                    )
 
 
 if __name__ == '__main__':

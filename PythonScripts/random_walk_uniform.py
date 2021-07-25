@@ -5,7 +5,7 @@ from scipy.spatial import distance_matrix
 
 def generate_positions(num_samples):
     xs = np.random.uniform(-1,1,num_samples)
-    ys = np.random.uniform(-1,1,num_samples)
+    ys = np.random.uniform(0,1,num_samples)
     zs = np.random.uniform(-1,1,num_samples)
     positions = np.dstack((xs, ys, zs))[0]
     return positions

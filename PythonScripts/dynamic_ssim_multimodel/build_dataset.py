@@ -17,7 +17,10 @@ models = {
     "notredame000": ["notredame001", "notredame002", "notredame003"],
     "Owl_high000": ["Owl_high001", "Owl_high002", "Owl_high003"],
     "temple000": ["temple001", "temple002", "temple003"],
-    "xyzrgb_statuette000": ["xyzrgb_statuette001", "xyzrgb_statuette002", "xyzrgb_statuette003"]
+    "xyzrgb_statuette000": ["xyzrgb_statuette001", "xyzrgb_statuette002", "xyzrgb_statuette003"],
+    "DeathValley Mesh Output": ["DeathValley Mesh Output2", "DeathValley Mesh Output3", "DeathValley Mesh Output4"],
+    "LacockAbbey02": ["LacockAbbey02b", "LacockAbbey02c", "LacockAbbey02d"],
+    # "Lidded-Ewer0": ["Lidded-Ewer1", "Lidded-Ewer2", "Lidded-Ewer3"]
 }
 
 def load_positions():
@@ -30,7 +33,7 @@ def load_positions():
 
 def generate_samples(positions):
     MAX_DISTANCE = 0.2
-    MAX_NUM_PAIRS = 1000
+    MAX_NUM_PAIRS = 5000
     samples = list()
     for i in range(len(positions)):
         for j in range(i,len(positions)):
