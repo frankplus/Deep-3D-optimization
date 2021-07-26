@@ -59,19 +59,9 @@ class SsimDataset(Dataset):
     def __getitem__(self, idx):
         return self.dataset[idx]
 
-class NeuralNetwork(nn.Module):
-    def __init__(self, dropout = 0):
-        super(NeuralNetwork, self).__init__()
-        hidden_nodes = 256
-        self.linear_relu_stack = nn.Sequential(
-            nn.Linear(71, hidden_nodes),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(hidden_nodes, hidden_nodes),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(hidden_nodes, 1)
-        )
+class ConvNN(nn.Module):
+    def __init__(self):
+        super().__init__()
         self.cnn = nn.Sequential(
             nn.Conv2d(3,32,kernel_size=3,padding=1),
             nn.ReLU(),
@@ -87,12 +77,37 @@ class NeuralNetwork(nn.Module):
             nn.MaxPool2d(4,4),
             nn.Flatten()
         )
+    
+    def forward(self, x):
+        return self.cnn(x)
+
+class FeedForwardNN(nn.Module):
+    def __init__(self, dropout = 0):
+        super().__init__()
+        hidden_nodes = 256
+        self.linear_relu_stack = nn.Sequential(
+            nn.Linear(71, hidden_nodes),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_nodes, hidden_nodes),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_nodes, 1)
+        )
+    
+    def forward(self, x):
+        return self.linear_relu_stack(x)
+
+class MultimodelNN(nn.Module):
+    def __init__(self, cnn, ffn):
+        super(MultimodelNN, self).__init__()
+        self.cnn = cnn
+        self.ffn = ffn
 
     def forward(self, x, projections):
         features = self.cnn(projections)
         nn_inputs = torch.cat((x, features), 1)
-        # print(nn_inputs.size())
-        output = self.linear_relu_stack(nn_inputs)
+        output = self.ffn(nn_inputs)
         return output
 
 def train(dataloader, model, loss_fn, optimizer, device):
@@ -138,6 +153,33 @@ def eval(dataloader, model, loss_fn, device, print_example=False):
         print("example label: " + str(label))
     return test_loss
 
+def export_model(cnn, ffn, sample):
+    cnn = cnn.to("cpu")
+    ffn = ffn.to("cpu")
+    cnn_dummy_input = sample['projections'].to("cpu", torch.float)
+    torch.onnx.export(cnn,
+                    cnn_dummy_input,
+                    "cnn.onnx",
+                    export_params=True,
+                    opset_version=9,
+                    do_constant_folding=True,
+                    input_names = ['input'],
+                    output_names = ['output']
+                    )
+
+    features = cnn(cnn_dummy_input)
+    x = sample['input'].to("cpu", torch.float)
+    ffn_dummy_input = torch.cat((x, features), 1)
+    torch.onnx.export(ffn,
+                    ffn_dummy_input,
+                    "ffn.onnx",
+                    export_params=True,
+                    opset_version=9,
+                    do_constant_folding=True,
+                    input_names = ['input'],
+                    output_names = ['output']
+                    )
+
 def main():
     # Get cpu or gpu device for training.
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -161,7 +203,9 @@ def main():
     example_sample = next(iter(train_dataloader))
     print(example_sample)
 
-    model = NeuralNetwork().to(device)
+    cnn = ConvNN().to(device)
+    ffn = FeedForwardNN().to(device)
+    model = MultimodelNN(cnn, ffn).to(device)
     print(model)
 
     # training
@@ -188,18 +232,7 @@ def main():
     plt.legend()
     plt.show()
 
-    # export model
-    dummy_input = (example_sample['input'].to(device, torch.float), 
-                   example_sample['projections'].to(device, torch.float))
-    torch.onnx.export(model,                       # model being run
-                    dummy_input,                   # model dummy input (or a tuple for multiple inputs)
-                    "model.onnx",                  # where to save the model (can be a file or file-like object)
-                    export_params=True,            # store the trained parameter weights inside the model file
-                    opset_version=9,               # the ONNX version to export the model to
-                    do_constant_folding=True,      # whether to execute constant folding for optimization
-                    input_names = ['input'],  
-                    output_names = ['output']
-                    )
+    export_model(cnn, ffn, example_sample)
 
 
 if __name__ == '__main__':
