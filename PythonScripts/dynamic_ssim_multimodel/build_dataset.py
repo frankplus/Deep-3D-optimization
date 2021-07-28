@@ -12,15 +12,18 @@ log_dir = "../../logData/noscreenshot/"
 screenshots_path = "../../screenshots/"
 
 # a dictionary of LOD levels for each 3d model. The key is the reference LOD, value is a list of LOD levels
-models = {
+train_models = {
     "dragon000": ["dragon001", "dragon002", "dragon003"],
     "notredame000": ["notredame001", "notredame002", "notredame003"],
     "Owl_high000": ["Owl_high001", "Owl_high002", "Owl_high003"],
     "temple000": ["temple001", "temple002", "temple003"],
     "xyzrgb_statuette000": ["xyzrgb_statuette001", "xyzrgb_statuette002", "xyzrgb_statuette003"],
     "DeathValley Mesh Output": ["DeathValley Mesh Output2", "DeathValley Mesh Output3", "DeathValley Mesh Output4"],
-    "LacockAbbey02": ["LacockAbbey02b", "LacockAbbey02c", "LacockAbbey02d"],
-    # "Lidded-Ewer0": ["Lidded-Ewer1", "Lidded-Ewer2", "Lidded-Ewer3"]
+    "LacockAbbey02": ["LacockAbbey02b", "LacockAbbey02c", "LacockAbbey02d"]
+}
+
+test_models = {
+    "Lidded-Ewer0": ["Lidded-Ewer1", "Lidded-Ewer2", "Lidded-Ewer3"]
 }
 
 def load_positions():
@@ -31,9 +34,9 @@ def load_positions():
             positions.append(pos)
     return positions
 
-def generate_samples(positions):
+def generate_samples(positions, models):
     MAX_DISTANCE = 0.2
-    MAX_NUM_PAIRS = 10000
+    MAX_NUM_PAIRS = 5000
     samples = list()
     for i in range(len(positions)):
         for j in range(i,len(positions)):
@@ -94,7 +97,7 @@ def get_lod_stats(lod_name):
         stats.append(selected_stats)
     return stats
 
-def generate_dataset(samples):
+def generate_dataset(samples, models):
     all_stats = dict()
     for model in models:
         for lod_name in models[model]:
@@ -136,12 +139,17 @@ def plot_image_grid(images, ncols=None, cmap='gray'):
 
 
 positions = load_positions()
-samples = generate_samples(positions)
-print(f"{len(samples)} pairs generated")
+samples = generate_samples(positions, train_models)
+print(f"{len(samples)} training pairs generated")
+
+test_samples = generate_samples(positions, test_models)
+print(f"{len(samples)} test pairs generated")
 
 dataset = {
-    "models": models,
-    "samples": generate_dataset(samples)
+    "models": train_models,
+    "samples": generate_dataset(samples, train_models),
+    "test_models": test_models,
+    "test_samples": generate_dataset(test_samples, test_models)
 }
 
 # save

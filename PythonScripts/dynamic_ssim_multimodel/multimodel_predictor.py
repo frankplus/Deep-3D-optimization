@@ -13,8 +13,7 @@ import torch.nn.functional as F
 
 EPOCHS = 5
 
-def load_projections(data, device):
-
+def load_projections(models, device):
     # loader uses the transforms function that comes with torchvision
     loader = transforms.Compose([
         transforms.ToTensor()])  
@@ -30,7 +29,6 @@ def load_projections(data, device):
         projections_dir = "projections/"
         return f"{projections_dir}{model}_{plane}.png"
 
-    models = data["models"]
     projections = dict()
     for model in models:
         planes = [image_loader(get_path(model, plane)) for plane in ["H", "V", "L"]]
@@ -40,13 +38,14 @@ def load_projections(data, device):
 
 
 class SsimDataset(Dataset):
-    def __init__(self, data, projections):
+    def __init__(self, samples, models, device):
+        projections = load_projections(models, device)
         self.dataset = list()
-        for sample in data["samples"]:
+        for sample in samples:
             pos = sample["pos"]
             pos_ref = sample["pos_ref"]
             model = sample["model"]
-            lod_id = data["models"][model].index(sample["lod_name"])
+            lod_id = models[model].index(sample["lod_name"])
             ssim = sample["ssim"]
             fps = sample["fps"] / 100.0
             self.dataset.append({"input": np.array(pos + pos_ref + [lod_id]), 
@@ -180,16 +179,8 @@ def export_model(cnn, ffn, sample):
                     output_names = ['output']
                     )
 
-def main():
-    # Get cpu or gpu device for training.
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print("Using {} device".format(device))
-
-    with open("dataset.json", 'r') as f:
-        data = json.load(f)
-
-    projections = load_projections(data, device)
-    dataset = SsimDataset(data, projections)
+def train_eval_loop(samples, models, device):
+    dataset = SsimDataset(samples, models, device)
 
     print("example sample")
     print(dataset.__getitem__(0))
@@ -201,7 +192,6 @@ def main():
     train_dataloader = DataLoader(train_set, batch_size=4, shuffle=True)
     eval_dataloader = DataLoader(eval_set, batch_size=4, shuffle=True)
     example_sample = next(iter(train_dataloader))
-    print(example_sample)
 
     cnn = ConvNN().to(device)
     ffn = FeedForwardNN().to(device)
@@ -222,7 +212,6 @@ def main():
         scheduler.step(val_loss)
         train_history.append(train_loss)
         eval_history.append(val_loss)
-    print("Done!")
 
     # plot results
     plt.plot(train_history, label="train")
@@ -230,9 +219,29 @@ def main():
     plt.xlabel("epoch")
     plt.ylabel("MSE")
     plt.legend()
-    plt.show()
 
     export_model(cnn, ffn, example_sample)
+    return model
+
+def test(nnmodel, samples, models, device):
+    print("________ TEST ________")
+    dataset = SsimDataset(samples, models, device)
+    dataloader = DataLoader(dataset, batch_size=4, shuffle=False)
+    loss_fn = nn.MSELoss()
+    test_loss = eval(dataloader, nnmodel, loss_fn, device, print_example=True)
+
+def main():
+    # Get cpu or gpu device for training.
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print("Using {} device".format(device))
+
+    with open("dataset.json", 'r') as f:
+        data = json.load(f)
+
+    trained_model = train_eval_loop(data["samples"], data["models"], device)
+    test(trained_model, data["test_samples"], data["test_models"], device)
+
+    plt.show()
 
 
 if __name__ == '__main__':
