@@ -504,9 +504,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 302044275}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: feffff16f959b5c41a23d7fb6f72fa37, type: 3}
+  m_Script: {fileID: 11500000, guid: 6e5d083c1ed69447186268d0d8b6c1cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Length: 15.5
+  Mask:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!23 &302044278
 MeshRenderer:
   m_ObjectHideFlags: 0
