@@ -11,7 +11,7 @@ from PIL import Image
 from torchvision import transforms
 import torch.nn.functional as F
 
-EPOCHS = 5
+EPOCHS = 50
 
 def load_projections(models, device):
     # loader uses the transforms function that comes with torchvision
@@ -152,9 +152,9 @@ def eval(dataloader, model, loss_fn, device, print_example=False):
         print("example label: " + str(label))
     return test_loss
 
-def export_model(cnn, ffn, sample):
-    cnn = cnn.to("cpu")
-    ffn = ffn.to("cpu")
+def export_model(nnmodel, sample):
+    cnn = nnmodel.cnn.to("cpu")
+    ffn = nnmodel.ffn.to("cpu")
     cnn_dummy_input = sample['projections'].to("cpu", torch.float)
     torch.onnx.export(cnn,
                     cnn_dummy_input,
@@ -220,8 +220,7 @@ def train_eval_loop(samples, models, device):
     plt.ylabel("MSE")
     plt.legend()
 
-    export_model(cnn, ffn, example_sample)
-    return model
+    return model, example_sample
 
 def test(nnmodel, samples, models, device):
     print("________ TEST ________")
@@ -238,8 +237,9 @@ def main():
     with open("dataset.json", 'r') as f:
         data = json.load(f)
 
-    trained_model = train_eval_loop(data["samples"], data["models"], device)
+    trained_model, example_sample = train_eval_loop(data["samples"], data["models"], device)
     test(trained_model, data["test_samples"], data["test_models"], device)
+    export_model(trained_model, example_sample)
 
     plt.show()
 
