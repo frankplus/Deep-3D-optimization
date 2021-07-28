@@ -34,9 +34,8 @@ def load_positions():
             positions.append(pos)
     return positions
 
-def generate_samples(positions, models):
+def generate_samples(positions, models, max_num_pairs):
     MAX_DISTANCE = 0.2
-    MAX_NUM_PAIRS = 5000
     samples = list()
     for i in range(len(positions)):
         for j in range(i,len(positions)):
@@ -55,8 +54,8 @@ def generate_samples(positions, models):
                     })
 
     random.shuffle(samples)
-    if len(samples) > MAX_NUM_PAIRS:
-        samples = samples[:MAX_NUM_PAIRS]
+    if len(samples) > max_num_pairs:
+        samples = samples[:max_num_pairs]
     return samples
 
 def compute_ssim_from_pair(i, j, dir, ref_dir):
@@ -139,11 +138,11 @@ def plot_image_grid(images, ncols=None, cmap='gray'):
 
 
 positions = load_positions()
-samples = generate_samples(positions, train_models)
+samples = generate_samples(positions, train_models, max_num_pairs=10000)
 print(f"{len(samples)} training pairs generated")
 
-test_samples = generate_samples(positions, test_models)
-print(f"{len(samples)} test pairs generated")
+test_samples = generate_samples(positions, test_models, max_num_pairs=1000)
+print(f"{len(test_samples)} test pairs generated")
 
 dataset = {
     "models": train_models,
