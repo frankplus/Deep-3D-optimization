@@ -9,7 +9,7 @@ public class FlyCamera : MonoBehaviour {
         space : Moves camera on X and Z axis only.  So camera doesn't gain any height
     */
 
-    public bool lockLookAtToOrigin = false;
+    public bool lookAtOrigin = false;
      
     float mainSpeed = 1.0f; //regular speed
     float shiftAdd = 250.0f; //multiplied by how long shift is held.  Basically running
@@ -20,7 +20,7 @@ public class FlyCamera : MonoBehaviour {
      
     void Update () {
 
-        if (lockLookAtToOrigin)
+        if (lookAtOrigin)
         {
             transform.LookAt(new Vector3(0,0,0));
         } 
