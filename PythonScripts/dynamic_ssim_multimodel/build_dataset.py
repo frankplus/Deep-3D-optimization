@@ -13,17 +13,17 @@ screenshots_path = "../../screenshots/"
 
 # a dictionary of LOD levels for each 3d model. The key is the reference LOD, value is a list of LOD levels
 train_models = {
-    "dragon000": ["dragon001", "dragon002", "dragon003"],
-    "notredame000": ["notredame001", "notredame002", "notredame003"],
-    "Owl_high000": ["Owl_high001", "Owl_high002", "Owl_high003"],
-    "temple000": ["temple001", "temple002", "temple003"],
-    "xyzrgb_statuette000": ["xyzrgb_statuette001", "xyzrgb_statuette002", "xyzrgb_statuette003"],
-    "DeathValley Mesh Output": ["DeathValley Mesh Output2", "DeathValley Mesh Output3", "DeathValley Mesh Output4"],
-    "LacockAbbey02": ["LacockAbbey02b", "LacockAbbey02c", "LacockAbbey02d"]
+    "dragon000": ["dragon000", "dragon001", "dragon002", "dragon003"],
+    "notredame000": ["notredame000", "notredame001", "notredame002", "notredame003"],
+    "Owl_high000": ["Owl_high000", "Owl_high001", "Owl_high002", "Owl_high003"],
+    "temple000": ["temple000", "temple001", "temple002", "temple003"],
+    "xyzrgb_statuette000": ["xyzrgb_statuette000", "xyzrgb_statuette001", "xyzrgb_statuette002", "xyzrgb_statuette003"],
+    "DeathValley Mesh Output": ["DeathValley Mesh Output", "DeathValley Mesh Output2", "DeathValley Mesh Output3", "DeathValley Mesh Output4"],
+    "LacockAbbey02": ["LacockAbbey02", "LacockAbbey02b", "LacockAbbey02c", "LacockAbbey02d"]
 }
 
 test_models = {
-    "Lidded-Ewer0": ["Lidded-Ewer1", "Lidded-Ewer2", "Lidded-Ewer3"]
+    "Lidded-Ewer0": ["Lidded-Ewer0", "Lidded-Ewer1", "Lidded-Ewer2", "Lidded-Ewer3"]
 }
 
 def load_positions():

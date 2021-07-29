@@ -1,15 +1,15 @@
 {
   "dependencies": {
     "com.unity.barracuda": {
-      "version": "2.1.0-preview",
+      "version": "https://github.com/frankplus/barracuda-release.git",
       "depth": 0,
-      "source": "registry",
+      "source": "git",
       "dependencies": {
         "com.unity.burst": "1.6.0-pre.2",
         "com.unity.modules.jsonserialize": "1.0.0",
         "com.unity.modules.imageconversion": "1.0.0"
       },
-      "url": "https://packages.unity.com"
+      "hash": "65c39c3ba816d9dacab1b1f487b7ba4dec4e2d0b"
     },
     "com.unity.burst": {
       "version": "1.6.0-pre.2",
