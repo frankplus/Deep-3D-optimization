@@ -8,10 +8,10 @@ public class SsimPredict : MonoBehaviour
 {
 
     public NNModel cnnModelSource;
-
     public NNModel ffnModelSource;
-    
-    // Start is called before the first frame update
+    public GameObject projectionBox;
+    private Camera cam;
+    public GameObject lodContainer;
 
     Tensor ComputeProjections() 
     {
@@ -40,28 +40,45 @@ public class SsimPredict : MonoBehaviour
         return projections;
     }
 
-    void Start()
+    Tensor ComputeCnnFeatures()
     {
         var model = ModelLoader.Load(cnnModelSource);
         var worker = WorkerFactory.CreateWorker(WorkerFactory.Type.ComputePrecompiled, model);
-
-        // var inputTensor = ComputeProjections();
-        worker.Execute(new Tensor(4, 64, 64, 3));
-
-        // var inputTensor = new Tensor(1, 2, new float[2] { 0, 0 });
-        // worker.Execute(inputTensor);
-
-        // var output = worker.PeekOutput();
-        // print("This is the output: " + (output[0] < 0.5? 0 : 1));
-        
-        // inputTensor.Dispose();
-        // output.Dispose();
+        var inputTensor = ComputeProjections();
+        worker.Execute(inputTensor);
+        var cnnFeatures = worker.PeekOutput();
+        inputTensor.Dispose();
         worker.Dispose();
+
+        return cnnFeatures;
+    }
+
+    Tensor PredictSsim()
+    {
+        var model = ModelLoader.Load(ffnModelSource);
+        var worker = WorkerFactory.CreateWorker(WorkerFactory.Type.ComputePrecompiled, model);
+        var inputTensor = ComputeCnnFeatures();
+        worker.Execute(inputTensor);
+        var output = worker.PeekOutput();
+        inputTensor.Dispose();
+        worker.Dispose();
+
+        return output;
+    }
+
+    void Start()
+    {
+        cam = this.GetComponent<Camera>();
+        projectionBox.SetActive(false);
+
+        print(lodContainer.transform);
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        var pos = cam.transform.position;
+        var velocity = cam.velocity;
+        var pos2 = pos + velocity * 0.5f;
     }
 }
