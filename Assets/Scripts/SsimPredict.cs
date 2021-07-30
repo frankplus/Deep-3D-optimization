@@ -13,6 +13,8 @@ public class SsimPredict : MonoBehaviour
     private Camera cam;
     public GameObject lodContainer;
 
+    private Tensor cnnFeatures;
+
     Tensor ComputeProjections() 
     {
         var height = Settings.Height;
@@ -53,11 +55,22 @@ public class SsimPredict : MonoBehaviour
         return cnnFeatures;
     }
 
-    Tensor PredictSsim()
+    Tensor PredictSsim(Vector3 posRef, Vector3 pos, float lodId)
     {
+        // float[] parameters = {pos.x, pos.y, pos.z, posRef.x, posRef.y, posRef.z, lodId};
+        // float[] cnnFeaturesArray = cnnFeatures.ToReadOnlyArray();
+
+        // concatenate the two float arrays
+        // float[] inputArray = new float[parameters.Length + cnnFeaturesArray.Length];
+        // parameters.CopyTo(inputArray, 0);
+        // cnnFeaturesArray.CopyTo(inputArray, parameters.Length);
+        // Tensor inputTensor = new Tensor(1,1,1,inputArray.Length, inputArray, "inputTensor");
+        // print(inputTensor);
+
+        var inputTensor = new Tensor(,1,1,71);
+
         var model = ModelLoader.Load(ffnModelSource);
         var worker = WorkerFactory.CreateWorker(WorkerFactory.Type.ComputePrecompiled, model);
-        var inputTensor = ComputeCnnFeatures();
         worker.Execute(inputTensor);
         var output = worker.PeekOutput();
         inputTensor.Dispose();
@@ -69,16 +82,24 @@ public class SsimPredict : MonoBehaviour
     void Start()
     {
         cam = this.GetComponent<Camera>();
+        cnnFeatures = ComputeCnnFeatures();
         projectionBox.SetActive(false);
 
-        print(lodContainer.transform);
+        var posRef = cam.transform.position;
+        var velocity = cam.velocity;
+        var pos = posRef + velocity * 0.5f;
+        Tensor output = PredictSsim(posRef, pos, 1.0f);
+        output.Dispose();
     }
 
     // Update is called once per frame
     void Update()
     {
-        var pos = cam.transform.position;
-        var velocity = cam.velocity;
-        var pos2 = pos + velocity * 0.5f;
+
+    }
+
+    void OnDestroy()
+    {
+        cnnFeatures.Dispose();
     }
 }
