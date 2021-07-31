@@ -15,7 +15,7 @@ public class SsimPredict : MonoBehaviour
 
     private Tensor cnnFeatures;
 
-    Tensor ComputeProjections() 
+    private Tensor ComputeProjections() 
     {
         var height = Settings.Height;
         var width = Settings.Width;
@@ -35,48 +35,57 @@ public class SsimPredict : MonoBehaviour
                 System.Array.Reverse(px, i * height, height);
 
             for(int i=0; i<height; i++)
-                for(int j=0; j<width; j++)
-                    projections[0, i, j, k] = px[i*width + j][0];
+                for(int j=0; j<width; j++) {
+                    projections[0, i, j, k] = (float) px[i*width + j][0] / 255.0f;
+                    // if (projections[0, i, j, k] != 1.0f)
+                    //     print(projections[0, i, j, k]);
+                }
         }
 
         return projections;
     }
 
-    Tensor ComputeCnnFeatures()
+    private Tensor ComputeCnnFeatures()
     {
         var model = ModelLoader.Load(cnnModelSource);
         var worker = WorkerFactory.CreateWorker(WorkerFactory.Type.ComputePrecompiled, model);
         var inputTensor = ComputeProjections();
         worker.Execute(inputTensor);
-        var cnnFeatures = worker.PeekOutput();
+        var features = worker.PeekOutput().DeepCopy();
         inputTensor.Dispose();
         worker.Dispose();
 
-        return cnnFeatures;
+        return features;
     }
 
-    Tensor PredictSsim(Vector3 posRef, Vector3 pos, float lodId)
+    private float PredictSsim(Vector3 posRef, Vector3 pos, float lodId)
     {
-        // float[] parameters = {pos.x, pos.y, pos.z, posRef.x, posRef.y, posRef.z, lodId};
-        // float[] cnnFeaturesArray = cnnFeatures.ToReadOnlyArray();
+        float[] parameters = new float[] {pos.x, pos.y, pos.z, posRef.x, posRef.y, posRef.z, lodId};
+        float[] cnnFeaturesArray = cnnFeatures.ToReadOnlyArray();
 
-        // concatenate the two float arrays
-        // float[] inputArray = new float[parameters.Length + cnnFeaturesArray.Length];
-        // parameters.CopyTo(inputArray, 0);
-        // cnnFeaturesArray.CopyTo(inputArray, parameters.Length);
-        // Tensor inputTensor = new Tensor(1,1,1,inputArray.Length, inputArray, "inputTensor");
-        // print(inputTensor);
-
-        var inputTensor = new Tensor(,1,1,71);
+        // concatenate
+        int batchSize = 1;
+        float[] inputArray = new float[batchSize * (parameters.Length + cnnFeaturesArray.Length)];
+        parameters.CopyTo(inputArray, 0);
+        cnnFeaturesArray.CopyTo(inputArray, parameters.Length);
+        Tensor inputTensor = new Tensor(batchSize, 
+                                        1, 
+                                        1, 
+                                        parameters.Length + cnnFeaturesArray.Length, 
+                                        inputArray, 
+                                        "inputTensor"
+                                        );
 
         var model = ModelLoader.Load(ffnModelSource);
         var worker = WorkerFactory.CreateWorker(WorkerFactory.Type.ComputePrecompiled, model);
         worker.Execute(inputTensor);
-        var output = worker.PeekOutput();
+        Tensor output = worker.PeekOutput();
+        float ssim = output[0,0,0,0];
+        output.Dispose();
         inputTensor.Dispose();
         worker.Dispose();
 
-        return output;
+        return ssim;
     }
 
     void Start()
@@ -84,18 +93,16 @@ public class SsimPredict : MonoBehaviour
         cam = this.GetComponent<Camera>();
         cnnFeatures = ComputeCnnFeatures();
         projectionBox.SetActive(false);
-
-        var posRef = cam.transform.position;
-        var velocity = cam.velocity;
-        var pos = posRef + velocity * 0.5f;
-        Tensor output = PredictSsim(posRef, pos, 1.0f);
-        output.Dispose();
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        var posRef = cam.transform.position;
+        var velocity = cam.velocity;
+        var pos = posRef + velocity * 0.5f;
+        float output = PredictSsim(posRef, pos, 1.0f);
+        print("output: " + output);
     }
 
     void OnDestroy()
