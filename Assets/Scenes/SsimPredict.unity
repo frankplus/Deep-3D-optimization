@@ -1237,6 +1237,7 @@ MonoBehaviour:
   ffnModelSource: {fileID: 5022602860645237092, guid: 6692577e3dfb549dcad5671b588ce39b, type: 3}
   projectionBox: {fileID: 1719418329}
   lodContainer: {fileID: 677858007}
+  skipNFrames: 30
 --- !u!114 &1918898668
 MonoBehaviour:
   m_ObjectHideFlags: 0

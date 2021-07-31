@@ -11,9 +11,12 @@ public class SsimPredict : MonoBehaviour
     public NNModel ffnModelSource;
     public GameObject projectionBox;
     public GameObject lodContainer;
+    public int skipNFrames = 60;
+
     private Camera cam;
     private Tensor cnnFeatures;
     private IWorker ssimPredictorWorker;
+    private int counter = 0;
 
     private Tensor ComputeProjections() 
     {
@@ -110,11 +113,22 @@ public class SsimPredict : MonoBehaviour
 
     void Update()
     {
-        Vector3 posRef = cam.transform.position;
-        Vector3 velocity = cam.velocity;
-        Vector3 pos = posRef + velocity * 0.5f;
-        float output = PredictSsim(posRef, pos, 1.0f);
-        print("output: " + output);
+        if (counter % skipNFrames == 0)
+        {
+            Vector3 posRef = cam.transform.position;
+            Vector3 velocity = cam.velocity;
+            Vector3 pos = posRef + velocity * 0.5f;
+            float ssim0 = PredictSsim(posRef, pos, 0.0f);
+            float ssim1 = PredictSsim(posRef, pos, 1.0f);
+            float ssim2 = PredictSsim(posRef, pos, 2.0f);
+            float ssim3 = PredictSsim(posRef, pos, 3.0f);
+            double fps = 1.0 / Time.deltaTime;
+
+            string log = string.Format("ssim0: {0}, ssim1: {1}, ssim2: {2}, ssim3: {3}, fps: {4}", ssim0, ssim1, ssim2, ssim3, fps);
+            Debug.Log(log);
+        }
+
+        counter++;
     }
 
     void OnDestroy()

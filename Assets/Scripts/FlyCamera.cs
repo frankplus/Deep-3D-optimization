@@ -19,19 +19,6 @@ public class FlyCamera : MonoBehaviour {
     private float totalRun= 1.0f;
      
     void Update () {
-
-        if (lookAtOrigin)
-        {
-            transform.LookAt(new Vector3(0,0,0));
-        } 
-        else 
-        {
-            lastMouse = Input.mousePosition - lastMouse ;
-            lastMouse = new Vector3(-lastMouse.y * camSens, lastMouse.x * camSens, 0 );
-            lastMouse = new Vector3(transform.eulerAngles.x + lastMouse.x , transform.eulerAngles.y + lastMouse.y, 0);
-            transform.eulerAngles = lastMouse;
-            lastMouse =  Input.mousePosition;
-        }
        
         //Keyboard commands
         Vector3 p = GetBaseInput();
@@ -57,6 +44,19 @@ public class FlyCamera : MonoBehaviour {
           } else {
               transform.Translate(p);
           }
+        }
+
+        if (lookAtOrigin)
+        {
+            transform.LookAt(new Vector3(0, 0, 0));
+        }
+        else
+        {
+            lastMouse = Input.mousePosition - lastMouse;
+            lastMouse = new Vector3(-lastMouse.y * camSens, lastMouse.x * camSens, 0);
+            lastMouse = new Vector3(transform.eulerAngles.x + lastMouse.x, transform.eulerAngles.y + lastMouse.y, 0);
+            transform.eulerAngles = lastMouse;
+            lastMouse = Input.mousePosition;
         }
     }
      
