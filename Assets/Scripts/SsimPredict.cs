@@ -20,14 +20,28 @@ public class SsimPredict : MonoBehaviour
         var height = Settings.Height;
         var width = Settings.Width;
 
+        // compute projections
         SurfaceCountPlaneProjection[] planes = FindObjectsOfType<SurfaceCountPlaneProjection>();
         foreach (var plane in planes)
 			plane.ComputeProjections();
 
+        // compute order
+        var order = new PlaneType[] { PlaneType.HORIZONTAL, PlaneType.VERTICAL, PlaneType.LATERAL };
+        var indexOrder = new int[planes.Length];
+        for (int i=0; i < planes.Length; i++)
+        {
+            for (int j = 0; j < planes.Length; j++)
+            {
+                if (order[i] == planes[j].planeOrientation)
+                    indexOrder[i] = j;
+            }
+        }
+        
+        // construct tensor
         var projections = new Tensor(1, height, width, planes.Length);
         for(int k=0; k<planes.Length; k++)
         {
-            var px = planes[k].Pixels;
+            var px = planes[indexOrder[k]].Pixels;
 
             // flip png as pixels are ordered left to right, bottom to top
             System.Array.Reverse(px, 0, px.Length);
