@@ -10,10 +10,10 @@ public class SsimPredict : MonoBehaviour
     public NNModel cnnModelSource;
     public NNModel ffnModelSource;
     public GameObject projectionBox;
-    private Camera cam;
     public GameObject lodContainer;
-
+    private Camera cam;
     private Tensor cnnFeatures;
+    private IWorker ssimPredictorWorker;
 
     private Tensor ComputeProjections() 
     {
@@ -37,8 +37,6 @@ public class SsimPredict : MonoBehaviour
             for(int i=0; i<height; i++)
                 for(int j=0; j<width; j++) {
                     projections[0, i, j, k] = (float) px[i*width + j][0] / 255.0f;
-                    // if (projections[0, i, j, k] != 1.0f)
-                    //     print(projections[0, i, j, k]);
                 }
         }
 
@@ -76,37 +74,38 @@ public class SsimPredict : MonoBehaviour
                                         "inputTensor"
                                         );
 
-        var model = ModelLoader.Load(ffnModelSource);
-        var worker = WorkerFactory.CreateWorker(WorkerFactory.Type.ComputePrecompiled, model);
-        worker.Execute(inputTensor);
-        Tensor output = worker.PeekOutput();
+
+        this.ssimPredictorWorker.Execute(inputTensor);
+        Tensor output = this.ssimPredictorWorker.PeekOutput();
         float ssim = output[0,0,0,0];
         output.Dispose();
         inputTensor.Dispose();
-        worker.Dispose();
 
         return ssim;
     }
 
     void Start()
     {
-        cam = this.GetComponent<Camera>();
-        cnnFeatures = ComputeCnnFeatures();
+        this.cam = this.GetComponent<Camera>();
+        this.cnnFeatures = ComputeCnnFeatures();
         projectionBox.SetActive(false);
+
+        Model model = ModelLoader.Load(ffnModelSource);
+        this.ssimPredictorWorker = WorkerFactory.CreateWorker(WorkerFactory.Type.ComputePrecompiled, model);
     }
 
-    // Update is called once per frame
     void Update()
     {
-        var posRef = cam.transform.position;
-        var velocity = cam.velocity;
-        var pos = posRef + velocity * 0.5f;
+        Vector3 posRef = cam.transform.position;
+        Vector3 velocity = cam.velocity;
+        Vector3 pos = posRef + velocity * 0.5f;
         float output = PredictSsim(posRef, pos, 1.0f);
         print("output: " + output);
     }
 
     void OnDestroy()
     {
-        cnnFeatures.Dispose();
+        this.cnnFeatures.Dispose();
+        this.ssimPredictorWorker.Dispose();
     }
 }
