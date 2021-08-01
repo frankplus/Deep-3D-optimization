@@ -55,6 +55,8 @@ def show_distance_fps_plot(stats):
     fps = list(map(lambda x: x["fps"], stats))
     plt.scatter(dist, fps)
     plt.ylim(0,40)
+    plt.xlabel("distance")
+    plt.ylabel("fps")
     plt.show()
 
 def show_fps_hists():
@@ -82,7 +84,7 @@ def show_fps_plots():
     for i,lod in enumerate(lod_names):
         stats = get_lod_stats(lod)
         data = list(map(lambda x: x["fps"], stats))
-        data = movingaverage(data, 8)
+        data = movingaverage(data, 32)
         plt.plot(data, label=lod)
 
     plt.legend()
@@ -102,7 +104,7 @@ def triangle_fps_plot():
         stats = get_lod_stats(lod)
         triangle_count = list(map(lambda x: x["triangle_count"], stats))
         fps = list(map(lambda x: x["fps"], stats))
-        plt.scatter(triangle_count, fps)
+        plt.scatter(triangle_count, fps, s=4)
     plt.xlabel("triangle count")
     plt.ylabel("fps")
     plt.show()

@@ -10,17 +10,14 @@ using System.Text;
 using System.IO;
 
 
-
 public class CameraSequenceLog : MonoBehaviour
 {
     public float waitingInterval = 0.001f;
-    public float speedCam = 3.0f;
-
     public string cameraPath;
-
     public GameObject lodContainer;
 
-    private double lastInterval;
+    private double lastTime;
+    private int lastFrameCount;
     private Vector3[] pos_sequence;
     private Vector3[] orien_sequence;
     private int seq_num;
@@ -48,6 +45,9 @@ public class CameraSequenceLog : MonoBehaviour
             pos_sequence[i] = new Vector3(floatData[0], floatData[1], floatData[2]);
             orien_sequence[i] = new Vector3(floatData[3], floatData[4], floatData[5]);
         }
+
+        lastTime = Time.realtimeSinceStartup;
+        lastFrameCount = Time.frameCount;
 
         NextSequence();
     }
@@ -107,15 +107,14 @@ public class CameraSequenceLog : MonoBehaviour
     void Update()
     {
         double timeNow = Time.realtimeSinceStartup;
-        double time_interval = (timeNow - lastInterval);
+        double timeInterval = (timeNow - lastTime);
 
-        if (time_interval > waitingInterval)
+        if (timeInterval > waitingInterval)
         {
-            int ipos = (int)(((float)seq_num) / speedCam);
-            if (ipos == pos_sequence.Length)
+            if (seq_num == pos_sequence.Length)
             {
                 NextSequence();
-                ipos = 0;
+                seq_num = 0;
             }
 
             if (!running)
@@ -124,20 +123,21 @@ public class CameraSequenceLog : MonoBehaviour
             int triCount = UnityEditor.UnityStats.triangles;
             int vertCount = UnityEditor.UnityStats.vertices;
             int textCount = UnityEditor.UnityStats.renderTextureCount;
-            double fps_c = 1.0 / Time.deltaTime;
+            double fps_c = (Time.frameCount-lastFrameCount) / timeInterval;
 
-            cam1.transform.position = pos_sequence[ipos];
-            cam1.transform.rotation = Quaternion.LookRotation(orien_sequence[ipos] - pos_sequence[ipos], Vector3.up);
+            cam1.transform.position = pos_sequence[seq_num];
+            cam1.transform.rotation = Quaternion.LookRotation(orien_sequence[seq_num] - pos_sequence[seq_num], Vector3.up);
 
             if (logFile != null)
             {
-                string line = string.Format("counter: {0}; seq_num: {1}; position: {2}; triangle_count: {3}; vertex_count: {4}; textures_count: {5}; fps: {6}",
-                                ipos, seq_num, cam1.transform.position, triCount, vertCount, textCount, fps_c);
+                string line = string.Format("seq_num: {0}; position: {1}; triangle_count: {2}; vertex_count: {3}; textures_count: {4}; fps: {5}",
+                                seq_num, cam1.transform.position, triCount, vertCount, textCount, fps_c);
                 logFile.WriteLine(line);
             }
 
             seq_num++;
-            lastInterval = timeNow;
+            lastTime = timeNow;
+            lastFrameCount = Time.frameCount;
         }
     }
 
