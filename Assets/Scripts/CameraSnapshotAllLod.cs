@@ -13,38 +13,30 @@ using System.IO;
 
 public class CameraSnapshotAllLod : MonoBehaviour
 {
-
-    public int resWidth = 3300;
-    public int resHeight = 2550;
     public float waitingInterval = 0.001f;
-    public float speedCam = 3.0f;
-
-    // folder to write output (defaults to data path)
-    public string folderScreenshots;
     public string cameraPath;
-
     public GameObject lodContainer;
+    public int resWidth = 1024;
+    public int resHeight = 768;
+    public string folderScreenshots = "screenshots";
+    // optimize for many screenshots will not destroy any objects so future screenshots will be fast
+    public bool optimizeForManyScreenshots = true;
+    public enum Format { RAW, JPG, PNG, PPM };
+    public Format format = Format.PNG;
 
     // private vars for screenshot
     private Rect rect;
     private RenderTexture renderTexture;
     private Texture2D screenShot;
-    private double lastInterval;
-    private Vector3[] pos_sequence;
-    private Vector3[] orien_sequence;
-    private int seq_num;
-    private string folderLog;
+
+    private double lastTime;
+    private int lastFrameCount;
+    private Vector3[] posSequence;
+    private Vector3[] orienSequence;
+    private int seqNum;
     private StreamWriter logFile;
 
-    // optimize for many screenshots will not destroy any objects so future screenshots will be fast
-    public bool optimizeForManyScreenshots = true;
-
-    // configure with raw, jpg, png, or ppm (simple raw format)
-    public enum Format { RAW, JPG, PNG, PPM };
-    public Format format = Format.RAW;
-
-    private bool takeHiResShot = false;
-    private Camera cam1;
+    private Camera cam;
     private int currentLod = -1;
     private bool running = true;
 
@@ -53,21 +45,25 @@ public class CameraSnapshotAllLod : MonoBehaviour
 
         Application.runInBackground = true;
         
-        cam1 = this.GetComponent<Camera>();
+        cam = this.GetComponent<Camera>();
         
         var lines = File.ReadAllLines(Application.dataPath + "/" + cameraPath);
 
-        pos_sequence = new Vector3[lines.Length];
-        orien_sequence = new Vector3[lines.Length];
+        posSequence = new Vector3[lines.Length];
+        orienSequence = new Vector3[lines.Length];
         for (int i = 0; i < lines.Length; i++)
         {
             string line = lines[i];
             float[] floatData = Array.ConvertAll(line.Split(' '), float.Parse);
-            pos_sequence[i] = new Vector3(floatData[0], floatData[1], floatData[2]);
-            orien_sequence[i] = new Vector3(floatData[3], floatData[4], floatData[5]);
+            posSequence[i] = new Vector3(floatData[0], floatData[1], floatData[2]);
+            orienSequence[i] = new Vector3(floatData[3], floatData[4], floatData[5]);
         }
 
         NextSequence();
+
+        lastTime = Time.realtimeSinceStartup;
+        lastFrameCount = Time.frameCount;
+        MoveCam(seqNum);
     }
 
     private string GetDataPath()
@@ -112,58 +108,44 @@ public class CameraSnapshotAllLod : MonoBehaviour
 
         Debug.Log(lodName);
 
-        takeHiResShot = false;
-        seq_num = 0;
+        string folderLog = string.Format("{0}/logData", GetDataPath());
+        System.IO.Directory.CreateDirectory(folderLog);
+        string fileTmst = string.Format("{0}/{1}.txt", folderLog, lodName);
+        logFile = new StreamWriter(fileTmst, false);
 
         folderScreenshots = string.Format("{0}/screenshots/{1}", GetDataPath(), lodName);
         System.IO.Directory.CreateDirectory(folderScreenshots);
 
-        folderLog = string.Format("{0}/logData", GetDataPath());
-        System.IO.Directory.CreateDirectory(folderLog);
-
-        string fileTmst = string.Format("{0}/{1}.txt", folderLog, lodName);
-        logFile = new StreamWriter(fileTmst, false);
+        seqNum = 0;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        double timeNow = Time.realtimeSinceStartup;
-        double time_interval = (timeNow - lastInterval);
-
-        takeHiResShot |= (time_interval > waitingInterval);
-        if (takeHiResShot)
+        double timeInterval = Time.realtimeSinceStartup - lastTime;
+        if (timeInterval > waitingInterval)
         {
-            int ipos = (int)(((float)seq_num) / speedCam);
-            if (ipos == pos_sequence.Length)
-            {
+            // log statistics
+            int triCount = UnityEditor.UnityStats.triangles;
+            int vertCount = UnityEditor.UnityStats.vertices;
+            int textCount = UnityEditor.UnityStats.renderTextureCount;
+            double fps_c = (Time.frameCount - lastFrameCount) / timeInterval;
+
+            string line = string.Format("seq_num: {0}; position: {1}; triangle_count: {2}; vertex_count: {3}; textures_count: {4}; fps: {5}",
+                            seqNum, cam.transform.position, triCount, vertCount, textCount, fps_c);
+            logFile.WriteLine(line);
+
+            TakeScreenshot();
+
+            seqNum++;
+            if (seqNum == posSequence.Length)
                 NextSequence();
-                ipos = 0;
-            }
 
             if (!running)
                 return;
 
-            int triCount = UnityEditor.UnityStats.triangles;
-            int vertCount = UnityEditor.UnityStats.vertices;
-            int textCount = UnityEditor.UnityStats.renderTextureCount;
-            double fps_c = 1.0 / Time.deltaTime;
-
-            cam1.transform.position = pos_sequence[ipos];
-            cam1.transform.rotation = Quaternion.LookRotation(orien_sequence[ipos] - pos_sequence[ipos], Vector3.up);
-
-            if (logFile != null)
-            {
-                string line = string.Format("counter: {0}; seq_num: {1}; position: {2}; triangle_count: {3}; vertex_count: {4}; textures_count: {5}; fps: {6}",
-                                ipos, seq_num, cam1.transform.position, triCount, vertCount, textCount, fps_c);
-                logFile.WriteLine(line);
-            }
-
-            TakeScreenshot();
-
-            seq_num++;
-            takeHiResShot = false;
-            lastInterval = timeNow;
+            lastTime = Time.realtimeSinceStartup;
+            lastFrameCount = Time.frameCount;
+            MoveCam(seqNum);
         }
     }
 
@@ -179,8 +161,8 @@ public class CameraSnapshotAllLod : MonoBehaviour
         }
 
         // get main camera and manually render scene into rt
-        cam1.targetTexture = renderTexture;
-        cam1.Render();
+        cam.targetTexture = renderTexture;
+        cam.Render();
 
         // read pixels will read from the currently active render texture so make our offscreen 
         // render texture active and then read the pixels
@@ -188,7 +170,7 @@ public class CameraSnapshotAllLod : MonoBehaviour
         screenShot.ReadPixels(rect, 0, 0);
 
         // reset active camera texture and render texture
-        cam1.targetTexture = null;
+        cam.targetTexture = null;
         RenderTexture.active = null;
 
         // get our unique filename
@@ -245,11 +227,15 @@ public class CameraSnapshotAllLod : MonoBehaviour
         }
     }
 
-    // create a unique filename
     private string UniqueFilename()
     {
-        return string.Format("{0}/{1}.{2}", folderScreenshots, seq_num, format.ToString().ToLower());
+        return string.Format("{0}/{1}.{2}", folderScreenshots, seqNum, format.ToString().ToLower());
     }
 
+    private void MoveCam(int seqNum)
+    {
+        cam.transform.position = posSequence[seqNum];
+        cam.transform.rotation = Quaternion.LookRotation(orienSequence[seqNum] - posSequence[seqNum], Vector3.up);
+    }
 }
 

@@ -18,12 +18,12 @@ public class CameraSequenceLog : MonoBehaviour
 
     private double lastTime;
     private int lastFrameCount;
-    private Vector3[] pos_sequence;
-    private Vector3[] orien_sequence;
-    private int seq_num;
+    private Vector3[] posSequence;
+    private Vector3[] orienSequence;
+    private int seqNum;
     private StreamWriter logFile;
 
-    private Camera cam1;
+    private Camera cam;
     private int currentLod = -1;
     private bool running = true;
 
@@ -32,24 +32,25 @@ public class CameraSequenceLog : MonoBehaviour
 
         Application.runInBackground = true;
         
-        cam1 = this.GetComponent<Camera>();
+        cam = this.GetComponent<Camera>();
         
         var lines = File.ReadAllLines(Application.dataPath + "/" + cameraPath);
 
-        pos_sequence = new Vector3[lines.Length];
-        orien_sequence = new Vector3[lines.Length];
+        posSequence = new Vector3[lines.Length];
+        orienSequence = new Vector3[lines.Length];
         for (int i = 0; i < lines.Length; i++)
         {
             string line = lines[i];
             float[] floatData = Array.ConvertAll(line.Split(' '), float.Parse);
-            pos_sequence[i] = new Vector3(floatData[0], floatData[1], floatData[2]);
-            orien_sequence[i] = new Vector3(floatData[3], floatData[4], floatData[5]);
+            posSequence[i] = new Vector3(floatData[0], floatData[1], floatData[2]);
+            orienSequence[i] = new Vector3(floatData[3], floatData[4], floatData[5]);
         }
+
+        NextSequence();
 
         lastTime = Time.realtimeSinceStartup;
         lastFrameCount = Time.frameCount;
-
-        NextSequence();
+        MoveCam(seqNum);
     }
 
     private string GetDataPath()
@@ -94,50 +95,39 @@ public class CameraSequenceLog : MonoBehaviour
 
         Debug.Log(lodName);
 
-        seq_num = 0;
-
         string folderLog = string.Format("{0}/logData/noscreenshot", GetDataPath());
         System.IO.Directory.CreateDirectory(folderLog);
-
         string fileTmst = string.Format("{0}/{1}.txt", folderLog, lodName);
         logFile = new StreamWriter(fileTmst, false);
+
+        seqNum = 0;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        double timeNow = Time.realtimeSinceStartup;
-        double timeInterval = (timeNow - lastTime);
-
+        double timeInterval = Time.realtimeSinceStartup - lastTime;
         if (timeInterval > waitingInterval)
         {
-            if (seq_num == pos_sequence.Length)
-            {
+            // log statistics
+            int triCount = UnityEditor.UnityStats.triangles;
+            int vertCount = UnityEditor.UnityStats.vertices;
+            int textCount = UnityEditor.UnityStats.renderTextureCount;
+            double fps_c = (Time.frameCount - lastFrameCount) / timeInterval;
+
+            string line = string.Format("seq_num: {0}; position: {1}; triangle_count: {2}; vertex_count: {3}; textures_count: {4}; fps: {5}",
+                            seqNum, cam.transform.position, triCount, vertCount, textCount, fps_c);
+            logFile.WriteLine(line);
+
+            seqNum++;
+            if (seqNum == posSequence.Length)
                 NextSequence();
-                seq_num = 0;
-            }
 
             if (!running)
                 return;
 
-            int triCount = UnityEditor.UnityStats.triangles;
-            int vertCount = UnityEditor.UnityStats.vertices;
-            int textCount = UnityEditor.UnityStats.renderTextureCount;
-            double fps_c = (Time.frameCount-lastFrameCount) / timeInterval;
-
-            cam1.transform.position = pos_sequence[seq_num];
-            cam1.transform.rotation = Quaternion.LookRotation(orien_sequence[seq_num] - pos_sequence[seq_num], Vector3.up);
-
-            if (logFile != null)
-            {
-                string line = string.Format("seq_num: {0}; position: {1}; triangle_count: {2}; vertex_count: {3}; textures_count: {4}; fps: {5}",
-                                seq_num, cam1.transform.position, triCount, vertCount, textCount, fps_c);
-                logFile.WriteLine(line);
-            }
-
-            seq_num++;
-            lastTime = timeNow;
+            lastTime = Time.realtimeSinceStartup;
             lastFrameCount = Time.frameCount;
+            MoveCam(seqNum);
         }
     }
 
@@ -147,6 +137,12 @@ public class CameraSequenceLog : MonoBehaviour
         {
             logFile.Close();
         }
+    }
+
+    private void MoveCam(int seqNum)
+    {
+        cam.transform.position = posSequence[seqNum];
+        cam.transform.rotation = Quaternion.LookRotation(orienSequence[seqNum] - posSequence[seqNum], Vector3.up);
     }
 }
 
