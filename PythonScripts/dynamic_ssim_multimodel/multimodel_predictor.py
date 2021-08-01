@@ -62,16 +62,16 @@ class ConvNN(nn.Module):
     def __init__(self):
         super().__init__()
         self.cnn = nn.Sequential(
-            nn.Conv2d(3,32,kernel_size=3,padding=1),
+            nn.Conv2d(3,16,kernel_size=3,padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(4,4),
+            nn.Conv2d(16,32,kernel_size=3,padding=1),
             nn.ReLU(),
             nn.MaxPool2d(4,4),
             nn.Conv2d(32,64,kernel_size=3,padding=1),
             nn.ReLU(),
             nn.MaxPool2d(4,4),
-            nn.Conv2d(64,64,kernel_size=3,padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(4,4),
-            nn.Conv2d(64,64,kernel_size=3,padding=1),
+            nn.Conv2d(64,128,kernel_size=3,padding=1),
             nn.ReLU(),
             nn.MaxPool2d(4,4),
             nn.Flatten()
@@ -85,7 +85,7 @@ class FeedForwardNN(nn.Module):
         super().__init__()
         hidden_nodes = 256
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(71, hidden_nodes),
+            nn.Linear(135, hidden_nodes),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(hidden_nodes, hidden_nodes),
