@@ -114,7 +114,9 @@ def generate_dataset(samples, models):
             "model": sample["model"],
             "lod_name": sample["lod_name"],
             "ssim": ssim,
-            "fps": all_stats[sample["lod_name"]][sample["i"]]["fps"]
+            "fps": all_stats[sample["lod_name"]][sample["i"]]["fps"],
+            "vertex_count": all_stats[sample["lod_name"]][sample["i"]]["vertex_count"],
+            "triangle_count": all_stats[sample["lod_name"]][sample["i"]]["triangle_count"]
         }
         dataset.append(sample)
     return dataset

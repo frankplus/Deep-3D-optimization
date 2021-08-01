@@ -99,19 +99,19 @@ def print_averages():
             average = sum(data) / len(data)
             print(f"{lod} average {key}: {average}")
 
-def triangle_fps_plot():
+def vertex_fps_plot():
     for lod in lod_names:
         stats = get_lod_stats(lod)
-        triangle_count = list(map(lambda x: x["triangle_count"], stats))
+        vertex_count = list(map(lambda x: x["vertex_count"], stats))
         fps = list(map(lambda x: x["fps"], stats))
-        plt.scatter(triangle_count, fps, s=4)
-    plt.xlabel("triangle count")
+        plt.scatter(vertex_count, fps, s=4)
+    plt.xlabel("vertex count")
     plt.ylabel("fps")
     plt.show()
         
 
 print_averages()
-triangle_fps_plot()
+vertex_fps_plot()
 # show_fps_plots()
 # show_fps_hists()
 # stats = get_lod_stats(lod_names[0])
