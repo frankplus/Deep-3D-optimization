@@ -11,12 +11,13 @@ public class SsimPredict : MonoBehaviour
     public NNModel ffnModelSource;
     public GameObject projectionBox;
     public GameObject lodContainer;
-    public int skipNFrames = 60;
+    public float waitingInterval = 0.1f;
 
     private Camera cam;
     private Tensor cnnFeatures;
     private IWorker ssimPredictorWorker;
     private int counter = 0;
+    private double lastTime;
 
     private Tensor ComputeProjections() 
     {
@@ -102,6 +103,35 @@ public class SsimPredict : MonoBehaviour
         return (ssim, vertexCount);
     }
 
+    private float ComputeScore(float ssim, float vertices)
+    {
+        return ssim + 1 / (1 + vertices);
+    }
+
+    private int PredictBestLod()
+    {
+        Vector3 posRef = cam.transform.position;
+        Vector3 velocity = cam.velocity;
+        Vector3 pos = posRef + velocity * 0.5f;
+
+        float maxScore = -1;
+        int maxLod = -1;
+        for (int i = 0; i < 4; i++)
+        {
+            (float ssim, float vertices) = Predict(posRef, pos, i);
+            float score = ComputeScore(ssim, vertices);
+            if (score > maxScore)
+            {
+                maxScore = score;
+                maxLod = i;
+            }
+
+            Debug.Log(string.Format("lod{0} ssim:{1} vertices:{2} score:{3}", i, ssim, vertices, score));
+        }
+
+        return maxLod;
+    }
+
     void Start()
     {
         this.cam = this.GetComponent<Camera>();
@@ -110,27 +140,23 @@ public class SsimPredict : MonoBehaviour
 
         Model model = ModelLoader.Load(ffnModelSource);
         this.ssimPredictorWorker = WorkerFactory.CreateWorker(WorkerFactory.Type.ComputePrecompiled, model);
+
+        lastTime = Time.realtimeSinceStartup;
     }
 
     void Update()
     {
-        if (counter % skipNFrames == 0)
+        double timeInterval = Time.realtimeSinceStartup - lastTime;
+        if (timeInterval > waitingInterval)
         {
-            Vector3 posRef = cam.transform.position;
-            Vector3 velocity = cam.velocity;
-            Vector3 pos = posRef + velocity * 0.5f;
-            double fps = 1.0 / Time.deltaTime;
+            foreach (Transform child in lodContainer.transform)
+                child.gameObject.SetActive(false);
 
-            string[] outputsPerLod = new string[4];
-            for (int i=0; i<4; i++)
-            {
-                (float ssim, float vertexCount) = Predict(posRef, pos, i);
-                outputsPerLod[i] = string.Format("{0} {1}", ssim, vertexCount);
-            }
-            string log = string.Join(" - ", outputsPerLod);
-            Debug.Log(log);
+            int bestLod = PredictBestLod();
+            GameObject lodObject = lodContainer.transform.GetChild(bestLod).gameObject;
+            lodObject.SetActive(true);
 
-            Debug.Log(string.Format("vertex count: {0}", UnityEditor.UnityStats.vertices / 10e7f));
+            lastTime = Time.realtimeSinceStartup;
         }
 
         counter++;
