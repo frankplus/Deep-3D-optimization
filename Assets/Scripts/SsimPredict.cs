@@ -73,7 +73,7 @@ public class SsimPredict : MonoBehaviour
         return features;
     }
 
-    private float PredictSsim(Vector3 posRef, Vector3 pos, float lodId)
+    private (float, float) Predict(Vector3 posRef, Vector3 pos, float lodId)
     {
         float[] parameters = new float[] {pos.x, pos.y, pos.z, posRef.x, posRef.y, posRef.z, lodId};
         float[] cnnFeaturesArray = cnnFeatures.ToReadOnlyArray();
@@ -95,10 +95,11 @@ public class SsimPredict : MonoBehaviour
         this.ssimPredictorWorker.Execute(inputTensor);
         Tensor output = this.ssimPredictorWorker.PeekOutput();
         float ssim = output[0,0,0,0];
+        float vertexCount = output[0,0,0,1];
         output.Dispose();
         inputTensor.Dispose();
 
-        return ssim;
+        return (ssim, vertexCount);
     }
 
     void Start()
@@ -118,14 +119,18 @@ public class SsimPredict : MonoBehaviour
             Vector3 posRef = cam.transform.position;
             Vector3 velocity = cam.velocity;
             Vector3 pos = posRef + velocity * 0.5f;
-            float ssim0 = PredictSsim(posRef, pos, 0.0f);
-            float ssim1 = PredictSsim(posRef, pos, 1.0f);
-            float ssim2 = PredictSsim(posRef, pos, 2.0f);
-            float ssim3 = PredictSsim(posRef, pos, 3.0f);
             double fps = 1.0 / Time.deltaTime;
 
-            string log = string.Format("ssim0: {0}, ssim1: {1}, ssim2: {2}, ssim3: {3}, fps: {4}", ssim0, ssim1, ssim2, ssim3, fps);
+            string[] outputsPerLod = new string[4];
+            for (int i=0; i<4; i++)
+            {
+                (float ssim, float vertexCount) = Predict(posRef, pos, i);
+                outputsPerLod[i] = string.Format("{0} {1}", ssim, vertexCount);
+            }
+            string log = string.Join(" - ", outputsPerLod);
             Debug.Log(log);
+
+            Debug.Log(string.Format("vertex count: {0}", UnityEditor.UnityStats.vertices / 10e7f));
         }
 
         counter++;

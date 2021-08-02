@@ -11,7 +11,7 @@ from PIL import Image
 from torchvision import transforms
 import torch.nn.functional as F
 
-EPOCHS = 50
+EPOCHS = 100
 
 def load_projections(models, device):
     # loader uses the transforms function that comes with torchvision
@@ -47,10 +47,10 @@ class SsimDataset(Dataset):
             model = sample["model"]
             lod_id = models[model].index(sample["lod_name"])
             ssim = sample["ssim"]
-            fps = sample["fps"] / 100.0
+            vertex_count = sample["vertex_count"] / 10e7
             self.dataset.append({"input": np.array(pos + pos_ref + [lod_id]), 
                                 "projections": projections[model], 
-                                "output": np.array([ssim])})
+                                "output": np.array([ssim, vertex_count])})
 
     def __len__(self):
         return len(self.dataset)
@@ -91,7 +91,7 @@ class FeedForwardNN(nn.Module):
             nn.Linear(hidden_nodes, hidden_nodes),
             nn.ReLU(),
             nn.Dropout(dropout),
-            nn.Linear(hidden_nodes, 1)
+            nn.Linear(hidden_nodes, 2)
         )
     
     def forward(self, x):
