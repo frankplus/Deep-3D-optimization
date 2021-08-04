@@ -616,7 +616,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: eab7e9665ad8d4f1280c0ca6556ccfec, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8716096802394440229, guid: eab7e9665ad8d4f1280c0ca6556ccfec, type: 3}
       propertyPath: m_IsActive
@@ -979,6 +979,11 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 3429690629739306066, guid: 50e54ddddcfb24ea1aa33d682aa00d8c, type: 3}
+--- !u!1 &360008782 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: eab7e9665ad8d4f1280c0ca6556ccfec, type: 3}
+  m_PrefabInstance: {fileID: 259444576}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &453703059
 GameObject:
   m_ObjectHideFlags: 0
@@ -2399,7 +2404,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 9156f88ffb2614d6590cb97e18e9955f, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1984005878548481965, guid: 9156f88ffb2614d6590cb97e18e9955f, type: 3}
       propertyPath: m_IsActive
@@ -2701,8 +2706,8 @@ MonoBehaviour:
   cnnModelSource: {fileID: 5022602860645237092, guid: ca1b949c989e2401d8769214c5e29089, type: 3}
   ffnModelSource: {fileID: 5022602860645237092, guid: 6692577e3dfb549dcad5671b588ce39b, type: 3}
   projectionBox: {fileID: 1719418329}
-  lodContainer: {fileID: 0}
-  skipNFrames: 30
+  lodContainer: {fileID: 360008782}
+  waitingInterval: 1
 --- !u!114 &1918898668
 MonoBehaviour:
   m_ObjectHideFlags: 0

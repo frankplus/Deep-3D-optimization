@@ -35,7 +35,7 @@ def load_positions():
     return positions
 
 def generate_samples(positions, models, max_num_pairs):
-    MAX_DISTANCE = 0.2
+    MAX_DISTANCE = 0.3
     samples = list()
     for i in range(len(positions)):
         for j in range(i,len(positions)):
@@ -58,20 +58,34 @@ def generate_samples(positions, models, max_num_pairs):
         samples = samples[:max_num_pairs]
     return samples
 
-def compute_ssim_from_pair(i, j, dir, ref_dir):
-    filepath_i = os.path.join(dir, f"{i}.png")
-    filepath_j = os.path.join(ref_dir, f"{j}.png")
-    image_i = io.imread(filepath_i)
-    image_j = io.imread(filepath_j)
-    return structural_similarity(image_i, image_j, multichannel=True)
+screenshots_cache = dict()
+screenshots_queue = list()
 
-def diff_image_from_pair(i, j, dir, ref_dir):
-    filepath_i = os.path.join(dir, f"{i}.png")
-    filepath_j = os.path.join(ref_dir, f"{j}.png")
-    image_i = io.imread(filepath_i)
-    image_j = io.imread(filepath_j)
-    return compare_images(image_i, image_j, method='diff')
+def load_screenshot(name, id):
+    global screenshots_cache
+    if name in screenshots_cache:
+        if id in screenshots_cache[name]:
+            return screenshots_cache[name][id]
+    else:
+        screenshots_cache[name] = dict()
 
+    path = os.path.join(screenshots_path + name, f"{id}.png")
+    image = io.imread(path)
+    screenshots_cache[name][id] = image
+    screenshots_queue.append((name, id))
+
+    # keep 1000 screenshots max in cache
+    if len(screenshots_queue) > 1000:
+        top = screenshots_queue[0]
+        del screenshots_cache[top[0]][top[1]]
+        screenshots_queue.pop(0)
+        
+    return screenshots_cache[name][id]
+
+def compute_ssim_from_pair(target, ref, id_target, id_ref):
+    image_ref = load_screenshot(ref, id_ref)
+    image_target = load_screenshot(target, id_target)
+    return structural_similarity(image_ref, image_target, multichannel=True)
 
 def get_lod_stats(lod_name):
     with open(f"{log_dir}{lod_name}.txt") as f:
@@ -90,7 +104,8 @@ def get_lod_stats(lod_name):
             "triangle_count": int(parsed["triangle_count"]),
             "vertex_count": int(parsed["vertex_count"]),
             "textures_count": int(parsed["textures_count"]),
-            "fps": float(parsed["fps"])
+            "fps": float(parsed["fps"]),
+            "mesh_vertex_count": int(parsed["mesh_vertex_count"]),
         }
 
         stats.append(selected_stats)
@@ -105,9 +120,7 @@ def generate_dataset(samples, models):
     dataset = list()
     for i,sample in enumerate(samples):
         print(i)
-        path = screenshots_path + sample["lod_name"]
-        path_ref = screenshots_path + sample["model"]
-        ssim = compute_ssim_from_pair(sample["i"], sample["j"], path, path_ref)
+        ssim = compute_ssim_from_pair(sample["lod_name"], sample["model"], sample["i"], sample["j"])
         sample = {
             "pos": positions[sample["i"]].tolist(),
             "pos_ref": positions[sample["j"]].tolist(),
@@ -116,7 +129,8 @@ def generate_dataset(samples, models):
             "ssim": ssim,
             "fps": all_stats[sample["lod_name"]][sample["i"]]["fps"],
             "vertex_count": all_stats[sample["lod_name"]][sample["i"]]["vertex_count"],
-            "triangle_count": all_stats[sample["lod_name"]][sample["i"]]["triangle_count"]
+            "triangle_count": all_stats[sample["lod_name"]][sample["i"]]["triangle_count"],
+            "mesh_vertex_count": all_stats[sample["lod_name"]][sample["i"]]["mesh_vertex_count"],
         }
         dataset.append(sample)
     return dataset

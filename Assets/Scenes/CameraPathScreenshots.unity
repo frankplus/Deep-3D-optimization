@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657838, g: 0.49641234, b: 0.57481676, a: 1}
+  m_IndirectSpecularColor: {r: 0.4492755, g: 0.49934655, b: 0.57570964, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -97,8 +97,8 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 112000000, guid: ec105e3881a574319957015d64d7155f, type: 2}
-  m_LightingSettings: {fileID: 4890085278179872738, guid: df79d40e223b74a1ea33584a9d1a3b2c, type: 2}
+  m_LightingDataAsset: {fileID: 112000000, guid: 8d0e8024069bd406f877c68693d52559, type: 2}
+  m_LightingSettings: {fileID: 4890085278179872738, guid: d5fd797a53721416da2b2a84a960e709, type: 2}
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -558,13 +558,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 412250605}
-  m_LocalRotation: {x: 0.66483974, y: 0.31989828, z: 0.25835285, w: 0.6236242}
-  m_LocalPosition: {x: -2.24, y: 2.41, z: -0.09}
+  m_LocalRotation: {x: 0.6226555, y: 0.39578632, z: 0.32982522, w: 0.5889555}
+  m_LocalPosition: {x: -2.204, y: 1.272, z: -0.114}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 41.6, y: 96.812, z: 91.342}
+  m_LocalEulerAnglesHint: {x: 28.187, y: 95.775, z: 89.543}
 --- !u!1 &512410550
 GameObject:
   m_ObjectHideFlags: 0
@@ -580,7 +580,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &512410551
 Transform:
   m_ObjectHideFlags: 0
@@ -1399,7 +1399,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1313300374}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 58e8440b41bb2443bb819fd09c346b84, type: 3}
   m_Name: 
@@ -1476,14 +1476,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1313300374}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b5dcff54f89374e6fa1a5f558c1a1e18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   waitingInterval: 0.1
   cameraPath: ../PythonScripts/positions.txt
-  lodContainer: {fileID: 512410550}
+  lodContainer: {fileID: 1945640703}
 --- !u!1001 &1372717811
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1572,7 +1572,7 @@ Light:
   m_GameObject: {fileID: 1437591826}
   m_Enabled: 1
   serializedVersion: 10
-  m_Type: 0
+  m_Type: 1
   m_Shape: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1
@@ -1631,13 +1631,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1437591826}
-  m_LocalRotation: {x: 0.61375684, y: -0.3735017, z: -0.35367173, w: 0.59892863}
-  m_LocalPosition: {x: 2.32, y: 1.14, z: 0}
+  m_LocalRotation: {x: 0.5953947, y: -0.40212703, z: -0.38161752, w: 0.58152145}
+  m_LocalPosition: {x: 2.481, y: 0.838, z: 0.005}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 28.099, y: -92.105, z: -90.231}
+  m_LocalEulerAnglesHint: {x: 22.678, y: -92.012, z: -90.016}
 --- !u!1 &1650801442
 GameObject:
   m_ObjectHideFlags: 0

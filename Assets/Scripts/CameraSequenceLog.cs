@@ -22,18 +22,19 @@ public class CameraSequenceLog : MonoBehaviour
     private Vector3[] orienSequence;
     private int seqNum;
     private StreamWriter logFile;
-
     private Camera cam;
     private int currentLod = -1;
     private bool running = true;
+    private int meshVertexCount = -1;
+
 
     void Start()
     {
-
         Application.runInBackground = true;
-        
         cam = this.GetComponent<Camera>();
-        
+
+        logGlobalStats();
+
         var lines = File.ReadAllLines(Application.dataPath + "/" + cameraPath);
 
         posSequence = new Vector3[lines.Length];
@@ -51,6 +52,16 @@ public class CameraSequenceLog : MonoBehaviour
         lastTime = Time.realtimeSinceStartup;
         lastFrameCount = Time.frameCount;
         MoveCam(seqNum);
+    }
+
+    private void logGlobalStats()
+    {
+        foreach (Transform child in lodContainer.transform)
+        {
+            int vertexCount = child.gameObject.GetComponentInChildren<MeshFilter>().mesh.vertexCount;
+            string line = string.Format("lodName: {0}; tot_vertex_count: {1}", child.gameObject.name, vertexCount);
+            print(line);
+        }
     }
 
     private string GetDataPath()
@@ -100,6 +111,7 @@ public class CameraSequenceLog : MonoBehaviour
         string fileTmst = string.Format("{0}/{1}.txt", folderLog, lodName);
         logFile = new StreamWriter(fileTmst, false);
 
+        meshVertexCount = lodObject.GetComponentInChildren<MeshFilter>().mesh.vertexCount;
         seqNum = 0;
     }
 
@@ -114,8 +126,8 @@ public class CameraSequenceLog : MonoBehaviour
             int textCount = UnityEditor.UnityStats.renderTextureCount;
             double fps_c = (Time.frameCount - lastFrameCount) / timeInterval;
 
-            string line = string.Format("seq_num: {0}; position: {1}; triangle_count: {2}; vertex_count: {3}; textures_count: {4}; fps: {5}",
-                            seqNum, cam.transform.position, triCount, vertCount, textCount, fps_c);
+            string line = string.Format("seq_num: {0}; position: {1}; triangle_count: {2}; vertex_count: {3}; textures_count: {4}; fps: {5}; mesh_vertex_count: {6}",
+                            seqNum, cam.transform.position, triCount, vertCount, textCount, fps_c, meshVertexCount);
             logFile.WriteLine(line);
 
             seqNum++;

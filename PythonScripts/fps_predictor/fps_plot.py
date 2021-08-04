@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+import math
 
 log_dir = "../../logData/noscreenshot/"
 
@@ -102,7 +103,7 @@ def print_averages():
 def vertex_fps_plot():
     for lod in lod_names:
         stats = get_lod_stats(lod)
-        vertex_count = list(map(lambda x: x["vertex_count"], stats))
+        vertex_count = list(map(lambda x: math.log2(x["vertex_count"]), stats))
         fps = list(map(lambda x: x["fps"], stats))
         plt.scatter(vertex_count, fps, s=4)
     plt.xlabel("vertex count")

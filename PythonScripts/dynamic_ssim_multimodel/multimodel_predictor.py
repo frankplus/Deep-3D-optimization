@@ -10,6 +10,7 @@ from sklearn.preprocessing import StandardScaler
 from PIL import Image
 from torchvision import transforms
 import torch.nn.functional as F
+import math
 
 EPOCHS = 100
 
@@ -46,9 +47,10 @@ class SsimDataset(Dataset):
             pos_ref = sample["pos_ref"]
             model = sample["model"]
             lod_id = models[model].index(sample["lod_name"])
+            mesh_vertex_count = math.log2(sample["mesh_vertex_count"]) / 30.0
             ssim = sample["ssim"]
-            vertex_count = sample["vertex_count"] / 10e7
-            self.dataset.append({"input": np.array(pos + pos_ref + [lod_id]), 
+            vertex_count = math.log2(sample["vertex_count"]) / 30.0
+            self.dataset.append({"input": np.array(pos + pos_ref + [mesh_vertex_count]), 
                                 "projections": projections[model], 
                                 "output": np.array([ssim, vertex_count])})
 

@@ -18,6 +18,8 @@ public class SsimPredict : MonoBehaviour
     private IWorker ssimPredictorWorker;
     private int counter = 0;
     private double lastTime;
+    private int[] allMeshVertexCount;
+    private int lodCount;
 
     private Tensor ComputeProjections() 
     {
@@ -74,9 +76,10 @@ public class SsimPredict : MonoBehaviour
         return features;
     }
 
-    private (float, float) Predict(Vector3 posRef, Vector3 pos, float lodId)
+    private (float, float) Predict(Vector3 posRef, Vector3 pos, int lodId)
     {
-        float[] parameters = new float[] {pos.x, pos.y, pos.z, posRef.x, posRef.y, posRef.z, lodId};
+        float meshVertexCount = Mathf.Log(allMeshVertexCount[lodId], 2) / 30.0f;
+        float[] parameters = new float[] {pos.x, pos.y, pos.z, posRef.x, posRef.y, posRef.z, meshVertexCount};
         float[] cnnFeaturesArray = cnnFeatures.ToReadOnlyArray();
 
         // concatenate
@@ -105,7 +108,7 @@ public class SsimPredict : MonoBehaviour
 
     private float ComputeScore(float ssim, float vertices)
     {
-        return ssim + 1 / (1 + vertices);
+        return ssim + 1 - vertices;
     }
 
     private int PredictBestLod()
@@ -116,7 +119,7 @@ public class SsimPredict : MonoBehaviour
 
         float maxScore = -1;
         int maxLod = -1;
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < lodCount; i++)
         {
             (float ssim, float vertices) = Predict(posRef, pos, i);
             float score = ComputeScore(ssim, vertices);
@@ -136,10 +139,22 @@ public class SsimPredict : MonoBehaviour
     {
         this.cam = this.GetComponent<Camera>();
         this.cnnFeatures = ComputeCnnFeatures();
-        projectionBox.SetActive(false);
+        this.projectionBox.SetActive(false);
+        this.lodCount = lodContainer.transform.childCount;
 
         Model model = ModelLoader.Load(ffnModelSource);
         this.ssimPredictorWorker = WorkerFactory.CreateWorker(WorkerFactory.Type.ComputePrecompiled, model);
+
+        // init mesh vertex count for each LOD
+        this.allMeshVertexCount = new int[lodCount];
+        for (int i = 0; i < lodCount; i++)
+        {
+            GameObject lodObject = lodContainer.transform.GetChild(i).gameObject;
+            int vertexCount = lodObject.GetComponentInChildren<MeshFilter>().mesh.vertexCount;
+            this.allMeshVertexCount[i] = vertexCount;
+            string line = string.Format("lodName: {0}; mesh_vertex_count: {1}", lodObject.name, vertexCount);
+            print(line);
+        }
 
         lastTime = Time.realtimeSinceStartup;
     }
