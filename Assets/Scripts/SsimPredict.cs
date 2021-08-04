@@ -108,7 +108,7 @@ public class SsimPredict : MonoBehaviour
 
     private float ComputeScore(float ssim, float vertices)
     {
-        return ssim + 1 - vertices;
+        return 3*ssim + (1-vertices);
     }
 
     private int PredictBestLod()
@@ -164,12 +164,14 @@ public class SsimPredict : MonoBehaviour
         double timeInterval = Time.realtimeSinceStartup - lastTime;
         if (timeInterval > waitingInterval)
         {
+            int bestLod = PredictBestLod();
+            GameObject bestLodObject = lodContainer.transform.GetChild(bestLod).gameObject;
             foreach (Transform child in lodContainer.transform)
                 child.gameObject.SetActive(false);
+            bestLodObject.SetActive(true);
 
-            int bestLod = PredictBestLod();
-            GameObject lodObject = lodContainer.transform.GetChild(bestLod).gameObject;
-            lodObject.SetActive(true);
+            float currentVertices = Mathf.Log(UnityEditor.UnityStats.vertices, 2) / 30f;
+            Debug.Log("current number of vertices: " + currentVertices);
 
             lastTime = Time.realtimeSinceStartup;
         }
