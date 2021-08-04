@@ -616,7 +616,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: eab7e9665ad8d4f1280c0ca6556ccfec, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8716096802394440229, guid: eab7e9665ad8d4f1280c0ca6556ccfec, type: 3}
       propertyPath: m_IsActive
@@ -979,11 +979,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 3429690629739306066, guid: 50e54ddddcfb24ea1aa33d682aa00d8c, type: 3}
---- !u!1 &360008782 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: eab7e9665ad8d4f1280c0ca6556ccfec, type: 3}
-  m_PrefabInstance: {fileID: 259444576}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &453703059
 GameObject:
   m_ObjectHideFlags: 0
@@ -999,7 +994,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &453703060
 Transform:
   m_ObjectHideFlags: 0
@@ -2657,7 +2652,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.01
   far clip plane: 1000
   field of view: 60
   orthographic: 0
@@ -2706,7 +2701,7 @@ MonoBehaviour:
   cnnModelSource: {fileID: 5022602860645237092, guid: ca1b949c989e2401d8769214c5e29089, type: 3}
   ffnModelSource: {fileID: 5022602860645237092, guid: 6692577e3dfb549dcad5671b588ce39b, type: 3}
   projectionBox: {fileID: 1719418329}
-  lodContainer: {fileID: 360008782}
+  lodContainer: {fileID: 453703059}
   waitingInterval: 1
 --- !u!114 &1918898668
 MonoBehaviour:
@@ -2721,3 +2716,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lookAtOrigin: 1
+  mainSpeed: 0.5

@@ -10,13 +10,12 @@ public class FlyCamera : MonoBehaviour {
     */
 
     public bool lookAtOrigin = false;
-     
-    float mainSpeed = 1.0f; //regular speed
-    float shiftAdd = 250.0f; //multiplied by how long shift is held.  Basically running
-    float maxShift = 1000.0f; //Maximum speed when holdin gshift
-    float camSens = 0.25f; //How sensitive it with mouse
+    public float mainSpeed = 0.5f; //regular speed
+
+    private float shiftMultiplier = 2.0f; //multiplied by how long shift is held.  Basically running
+    private float maxShift = 1000.0f; //Maximum speed when holdin gshift
+    private float camSens = 0.25f; //How sensitive it with mouse
     private Vector3 lastMouse = new Vector3(255, 255, 255); //kind of in the middle of the screen, rather than at the top (play)
-    private float totalRun= 1.0f;
      
     void Update () {
        
@@ -24,13 +23,11 @@ public class FlyCamera : MonoBehaviour {
         Vector3 p = GetBaseInput();
         if (p.sqrMagnitude > 0){ // only move while a direction key is pressed
           if (Input.GetKey (KeyCode.LeftShift)){
-              totalRun += Time.deltaTime;
-              p  = p * totalRun * shiftAdd;
+              p  = p * shiftMultiplier;
               p.x = Mathf.Clamp(p.x, -maxShift, maxShift);
               p.y = Mathf.Clamp(p.y, -maxShift, maxShift);
               p.z = Mathf.Clamp(p.z, -maxShift, maxShift);
           } else {
-              totalRun = Mathf.Clamp(totalRun * 0.5f, 1f, 1000f);
               p = p * mainSpeed;
           }
          

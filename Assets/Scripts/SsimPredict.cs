@@ -115,7 +115,7 @@ public class SsimPredict : MonoBehaviour
     {
         Vector3 posRef = cam.transform.position;
         Vector3 velocity = cam.velocity;
-        Vector3 pos = posRef + velocity * 0.5f;
+        Vector3 pos = posRef + velocity * 0.2f;
 
         float maxScore = -1;
         int maxLod = -1;
