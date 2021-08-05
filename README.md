@@ -102,54 +102,32 @@ naive model val loss: 0.0141
 ```
 As we can see, both training and validation loss of our model is very close to the losses of the naïve model. This implies that our model isn't really predicting much. This could indicate an issue with our deep learning model, or that the random generated path is too random. Either way, further investigation is needed.
 
-## Dynamic SSIM predictor
-The quality of experience in a AR/MR environment is also affected by the lag of the animation. The lag depends on two main factors: the refresh rate of the rendering and the speed of the camera as the user moves around the rendered mesh. We measure the lag as the difference in visual appearance between successive frames using the SSIM index. \
-When the user moves around the 3D object, the faster the user is moving and the slower the refresh rate is, the farther apart are the camera positions between successive frames, therefore the lower the SSIM is. \
-We call this index the "dynamic SSIM" which is in contrast to the first experiment where the SSIM is measured from a static camera position.
+## Fps - vertex count correlation
+During the rendering of 3d graphics it is intuitive that the larger the number of vertices to be rendered, the longer it takes to render a single frame, therefore the lower the refresh rate is. In the following graph we can clearly see this correlation between the fps and the log2 of the vertex count (as returned by `UnityEditor.UnityStats.vertices`) 
+![dynamic ssim predictor training history](documentation/images/fps_vertex_count_correlation.png)
+Below a certain vertex count the fps is limited to a range around 60 fps because the refresh rate of my display is 60Hz so the fps is capped to that frequency.\
+Given this result, instead of predicting the fps which is unstable and depends on the performance of the device, we can predict instead the number of vertices to be rendered which is indipendent from the rendering device.
+
+## Dynamic SSIM and vertex count predictor with generic 3d model
+The quality of experience in a AR/MR environment is affected by the lag of the animation and the quality of the 3d model. The lag depends on two main factors: the refresh rate of the rendering and the speed of the camera as the user moves around the rendered mesh (when the camera is still, a low refresh rate in not noticeable). However we cannot directly use the camera speed since a camera movement farther away from the 3d model matters less than a closer one with the same speed. \
+In our approach we project the camera position a constant time into the future e.g. t=0.1s, and we calculate the difference in visual appearance between the frame in the current position and the one projected into the future, using the SSIM index. The faster the user is moving, the farther apart are the camera positions, therefore the lower the SSIM is. \
+We also take into account the quality of the 3d model by taking the frame in the current position in the highest LOD and the frame in the projected position using the target LOD.
 
 ### NN architecture
-In this test I used a feed-forward neural network which takes in input the two positions from which the 3d object is rendered from, and outputs the SSIM between the two frames.
-```
-NeuralNetwork(
-  (linear_relu_stack): Sequential(
-    (0): Linear(in_features=6, out_features=128, bias=True)
-    (1): ReLU()
-    (2): Dropout(p=0, inplace=False)
-    (3): Linear(in_features=128, out_features=128, bias=True)
-    (4): ReLU()
-    (5): Dropout(p=0, inplace=False)
-    (6): Linear(in_features=128, out_features=1, bias=True)
-    (7): ReLU()
-  )
-)
-```
-
-![dynamic ssim predictor training history](documentation/images/dyn_ssim_training.png)
-
-
-```
-example input: tensor([[ 2.6785,  2.7059, -3.7737,  2.3978,  2.8071, -3.5982],
-        [ 0.6696,  1.6818,  1.6361,  0.7287,  1.8295,  1.2207],
-        [ 2.4919,  1.9658, -4.4340,  2.4167,  1.9548, -4.3911]])
-example prediction: tensor([0.4856, 0.3584, 0.5739])
-example label: tensor([0.4657, 0.3591, 0.6057])
-```
-
-## Dynamic SSIM predictor with generic 3d model
 ```
 MultimodelNN(
   (cnn): ConvNN(
     (cnn): Sequential(
-      (0): Conv2d(3, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (0): Conv2d(3, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
       (1): ReLU()
       (2): MaxPool2d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
-      (3): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (3): Conv2d(16, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
       (4): ReLU()
       (5): MaxPool2d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
-      (6): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (6): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
       (7): ReLU()
       (8): MaxPool2d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
-      (9): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (9): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
       (10): ReLU()
       (11): MaxPool2d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
       (12): Flatten(start_dim=1, end_dim=-1)
@@ -157,38 +135,53 @@ MultimodelNN(
   )
   (ffn): FeedForwardNN(
     (linear_relu_stack): Sequential(
-      (0): Linear(in_features=71, out_features=256, bias=True)
+      (0): Linear(in_features=135, out_features=256, bias=True)
       (1): ReLU()
       (2): Dropout(p=0, inplace=False)
       (3): Linear(in_features=256, out_features=256, bias=True)
       (4): ReLU()
       (5): Dropout(p=0, inplace=False)
-      (6): Linear(in_features=256, out_features=1, bias=True)
+      (6): Linear(in_features=256, out_features=2, bias=True)
     )
   )
 )
 ```
 
 ```
-Epoch 100
+Epoch 150
 -------------------------------
-Train avg loss: 0.000085
-Eval avg loss: 0.000121 
+Train avg loss: 0.000043
+Eval avg loss: 0.000062 
 
-________ TEST ________
-Eval avg loss: 0.000262 
-
-example input: tensor([[-0.0771,  0.6844, -1.0719, -0.0585,  0.7416, -0.9252,  1.0000],
-        [-0.2553,  0.4251,  0.7548, -0.2645,  0.5353,  0.6698,  2.0000],
-        [-0.2674,  0.7139,  0.0921, -0.2674,  0.7139,  0.0921,  2.0000],
-        [ 0.9022,  0.3333, -0.2704,  0.8856,  0.3658, -0.2393,  2.0000]],
+example input: tensor([[-1.0627,  0.1670,  0.5612, -1.0627,  0.1670,  0.5612,  0.6323],
+        [ 0.8922,  0.8695, -0.7675,  0.9546,  0.8485, -0.4901,  0.6655],
+        [ 0.0601,  0.1468,  0.8369, -0.1802,  0.1832,  0.7287,  0.6655],
+        [-1.0627,  0.1670,  0.5612, -0.8099,  0.1342,  0.6354,  0.6076]],
        device='cuda:0')
-example prediction: tensor([[0.9588],
-        [0.8915],
-        [0.9619],
-        [0.9564]], device='cuda:0')
-example label: tensor([[0.9408],
-        [0.8957],
-        [0.9206],
-        [0.9418]], device='cuda:0')
+example prediction: tensor([[0.9881, 0.7385],
+        [0.9394, 0.7593],
+        [0.8184, 0.7387],
+        [0.8115, 0.7083]], device='cuda:0')
+example label: tensor([[1.0000, 0.7323],
+        [0.9476, 0.7655],
+        [0.8266, 0.7429],
+        [0.8028, 0.7076]], device='cuda:0')
+________ TEST ________
+Eval avg loss: 0.000609 
+
+example input: tensor([[ 0.4145,  0.2270, -0.4572,  0.4736,  0.3458, -0.5689,  0.5788],
+        [ 0.0736,  0.9067, -1.0856, -0.1093,  0.8147, -0.9928,  0.5788],
+        [ 0.7789,  0.3491, -0.1945,  0.7789,  0.3491, -0.1945,  0.4198],
+        [ 1.0322,  0.7887, -0.6522,  0.9525,  0.6410, -0.5059,  0.4198]],
+       device='cuda:0')
+example prediction: tensor([[0.8870, 0.6693],
+        [0.9597, 0.6532],
+        [0.9458, 0.6153],
+        [0.9589, 0.6185]], device='cuda:0')
+example label: tensor([[0.7837, 0.6649],
+        [0.9422, 0.6562],
+        [0.9395, 0.5198],
+        [0.9508, 0.5198]], device='cuda:0')
 ```
+
+![dynamic ssim predictor training history](documentation/images/dyn_ssim_multimodel_training_history.png)
