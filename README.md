@@ -109,11 +109,12 @@ Below a certain vertex count the fps is limited to a range around 60 fps because
 Given this result, instead of predicting the fps which is unstable and depends on the performance of the device, we can predict instead the number of vertices to be rendered which is indipendent from the rendering device.
 
 ## Dynamic SSIM and vertex count predictor with generic 3d model
-The quality of experience in a AR/MR environment is affected by the lag of the animation and the quality of the 3d model. The lag depends on two main factors: the refresh rate of the rendering and the speed of the camera as the user moves around the rendered mesh (when the camera is still, a low refresh rate in not noticeable). However we cannot directly use the camera speed since a camera movement farther away from the 3d model matters less than a closer one with the same speed. \
-In our approach we project the camera position a constant time into the future e.g. t=0.1s, and we calculate the difference in visual appearance between the frame in the current position and the one projected into the future, using the SSIM index. The faster the user is moving, the farther apart are the camera positions, therefore the lower the SSIM is. \
-We also take into account the quality of the 3d model by taking the frame in the current position in the highest LOD and the frame in the projected position using the target LOD.
+The quality of experience in a AR/MR environment is affected by the lag of the animation and the quality of the 3d model. The lag depends on two main factors: the refresh rate of the rendering and the speed of the camera as the user moves around the rendered mesh (when the camera is still, a low refresh rate in not noticeable). However it's incorrect to directly use the camera speed since a camera movement farther away from the 3d model matters less than a closer one with the same speed. \
+In our approach we project the camera position a constant delta time into the future e.g. t=0.1s, and we calculate the difference in visual appearance between the frame in the current position and the one projected into the future, using the **SSIM index**. The faster the user is moving, the farther apart are the camera positions, therefore the lower the SSIM is. In order to evaluate the visual quality of the target LOD we take the frame in the current position using the highest LOD and the frame in the projected position using the target LOD.\
+Considering the correlation between fps and vertex count in the previous result, in our model we try to predict the **vertex count** alongside the ssim score.
 
 ### NN architecture
+![diagram](documentation/images/tesi_diagram.png)
 ```
 MultimodelNN(
   (cnn): ConvNN(
@@ -166,8 +167,11 @@ example label: tensor([[1.0000, 0.7323],
         [0.9476, 0.7655],
         [0.8266, 0.7429],
         [0.8028, 0.7076]], device='cuda:0')
-________ TEST ________
-Eval avg loss: 0.000609 
+```
+
+The following test is executed on a 3d model which is not present in the training set. We can see that our network is able to generalize to different 3d meshes.
+```
+Test avg loss: 0.000609 
 
 example input: tensor([[ 0.4145,  0.2270, -0.4572,  0.4736,  0.3458, -0.5689,  0.5788],
         [ 0.0736,  0.9067, -1.0856, -0.1093,  0.8147, -0.9928,  0.5788],
