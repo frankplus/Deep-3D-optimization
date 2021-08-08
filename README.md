@@ -119,16 +119,16 @@ Considering the correlation between fps and vertex count in the previous result,
 MultimodelNN(
   (cnn): ConvNN(
     (cnn): Sequential(
-      (0): Conv2d(3, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (0): Conv2d(3, 4, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
       (1): ReLU()
       (2): MaxPool2d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
-      (3): Conv2d(16, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (3): Conv2d(4, 8, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
       (4): ReLU()
       (5): MaxPool2d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
-      (6): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (6): Conv2d(8, 8, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
       (7): ReLU()
       (8): MaxPool2d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
-      (9): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (9): Conv2d(8, 8, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
       (10): ReLU()
       (11): MaxPool2d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
       (12): Flatten(start_dim=1, end_dim=-1)
@@ -136,7 +136,7 @@ MultimodelNN(
   )
   (ffn): FeedForwardNN(
     (linear_relu_stack): Sequential(
-      (0): Linear(in_features=135, out_features=256, bias=True)
+      (0): Linear(in_features=15, out_features=256, bias=True)
       (1): ReLU()
       (2): Dropout(p=0, inplace=False)
       (3): Linear(in_features=256, out_features=256, bias=True)
@@ -151,37 +151,27 @@ MultimodelNN(
 ```
 Epoch 150
 -------------------------------
-Train avg loss: 0.000043
-Eval avg loss: 0.000062 
+Train avg loss: 0.000028
+Eval avg loss: 0.000042 
 
-example input: tensor([[-1.0627,  0.1670,  0.5612, -1.0627,  0.1670,  0.5612,  0.6323],
-        [ 0.8922,  0.8695, -0.7675,  0.9546,  0.8485, -0.4901,  0.6655],
-        [ 0.0601,  0.1468,  0.8369, -0.1802,  0.1832,  0.7287,  0.6655],
-        [-1.0627,  0.1670,  0.5612, -0.8099,  0.1342,  0.6354,  0.6076]],
-       device='cuda:0')
-example prediction: tensor([[0.9881, 0.7385],
-        [0.9394, 0.7593],
-        [0.8184, 0.7387],
-        [0.8115, 0.7083]], device='cuda:0')
-example label: tensor([[1.0000, 0.7323],
-        [0.9476, 0.7655],
-        [0.8266, 0.7429],
-        [0.8028, 0.7076]], device='cuda:0')
+example prediction: tensor([[0.5407, 0.6635],
+        [0.9057, 0.6599],
+        [0.9589, 0.6529],
+        [1.0103, 0.8558]], device='cuda:0')
+example label: tensor([[0.5305, 0.6688],
+        [0.8985, 0.6561],
+        [0.9646, 0.6527],
+        [1.0000, 0.8549]], device='cuda:0')
 ```
 
 The following test is executed on a 3d model which is not present in the training set. We can see that our network is able to generalize to different 3d meshes.
 ```
-Test avg loss: 0.000609 
+Test avg loss: 0.000569 
 
-example input: tensor([[ 0.4145,  0.2270, -0.4572,  0.4736,  0.3458, -0.5689,  0.5788],
-        [ 0.0736,  0.9067, -1.0856, -0.1093,  0.8147, -0.9928,  0.5788],
-        [ 0.7789,  0.3491, -0.1945,  0.7789,  0.3491, -0.1945,  0.4198],
-        [ 1.0322,  0.7887, -0.6522,  0.9525,  0.6410, -0.5059,  0.4198]],
-       device='cuda:0')
-example prediction: tensor([[0.8870, 0.6693],
-        [0.9597, 0.6532],
-        [0.9458, 0.6153],
-        [0.9589, 0.6185]], device='cuda:0')
+example prediction: tensor([[0.8715, 0.6653],
+        [0.9630, 0.6510],
+        [0.9876, 0.6161],
+        [0.9816, 0.6163]], device='cuda:0')
 example label: tensor([[0.7837, 0.6649],
         [0.9422, 0.6562],
         [0.9395, 0.5198],

@@ -210,7 +210,7 @@ def train_eval_loop(samples, models, device):
     for t in range(EPOCHS):
         print(f"Epoch {t+1}\n-------------------------------")
         train_loss = train(train_dataloader, model, loss_fn, optimizer, device)
-        val_loss = eval(eval_dataloader, model, loss_fn, device, t%20==0)
+        val_loss = eval(eval_dataloader, model, loss_fn, device, (t+1)%10==0)
         scheduler.step(val_loss)
         train_history.append(train_loss)
         eval_history.append(val_loss)
