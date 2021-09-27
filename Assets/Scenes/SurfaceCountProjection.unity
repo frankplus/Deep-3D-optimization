@@ -2974,6 +2974,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1323865964}
     m_Modifications:
+    - target: {fileID: -8874417480516473116, guid: 6305706a81441424284d4414cb2736f1, type: 3}
+      propertyPath: m_Name
+      value: mercedesbenz0
+      objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6305706a81441424284d4414cb2736f1, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.279
@@ -3045,6 +3049,25 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 6305706a81441424284d4414cb2736f1, type: 3}
   m_PrefabInstance: {fileID: 1738386920}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1738386922 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -8874417480516473116, guid: 6305706a81441424284d4414cb2736f1, type: 3}
+  m_PrefabInstance: {fileID: 1738386920}
+  m_PrefabAsset: {fileID: 0}
+--- !u!64 &1738386923
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1738386922}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 3209854288065215219, guid: 6305706a81441424284d4414cb2736f1, type: 3}
 --- !u!1001 &1760072991
 PrefabInstance:
   m_ObjectHideFlags: 0

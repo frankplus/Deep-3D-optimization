@@ -16,14 +16,15 @@ train_models = {
     "dragon000": ["dragon000", "dragon001", "dragon002", "dragon003"],
     "notredame000": ["notredame000", "notredame001", "notredame002", "notredame003"],
     "Owl_high000": ["Owl_high000", "Owl_high001", "Owl_high002", "Owl_high003"],
-    "temple000": ["temple000", "temple001", "temple002", "temple003"],
     "xyzrgb_statuette000": ["xyzrgb_statuette000", "xyzrgb_statuette001", "xyzrgb_statuette002", "xyzrgb_statuette003"],
     "DeathValley Mesh Output": ["DeathValley Mesh Output", "DeathValley Mesh Output2", "DeathValley Mesh Output3", "DeathValley Mesh Output4"],
-    "LacockAbbey02": ["LacockAbbey02", "LacockAbbey02b", "LacockAbbey02c", "LacockAbbey02d"]
+    "LacockAbbey02": ["LacockAbbey02", "LacockAbbey02b", "LacockAbbey02c", "LacockAbbey02d"],
+    "Lidded-Ewer0": ["Lidded-Ewer0", "Lidded-Ewer1", "Lidded-Ewer2", "Lidded-Ewer3"],
+    "mercedesbenz0": ["mercedesbenz0"]
 }
 
 test_models = {
-    "Lidded-Ewer0": ["Lidded-Ewer0", "Lidded-Ewer1", "Lidded-Ewer2", "Lidded-Ewer3"]
+    "temple000": ["temple000", "temple001", "temple002", "temple003"]
 }
 
 def load_positions():
@@ -58,29 +59,10 @@ def generate_samples(positions, models, max_num_pairs):
         samples = samples[:max_num_pairs]
     return samples
 
-screenshots_cache = dict()
-screenshots_queue = list()
-
 def load_screenshot(name, id):
-    global screenshots_cache
-    if name in screenshots_cache:
-        if id in screenshots_cache[name]:
-            return screenshots_cache[name][id]
-    else:
-        screenshots_cache[name] = dict()
-
     path = os.path.join(screenshots_path + name, f"{id}.png")
     image = io.imread(path)
-    screenshots_cache[name][id] = image
-    screenshots_queue.append((name, id))
-
-    # keep 1000 screenshots max in cache
-    if len(screenshots_queue) > 1000:
-        top = screenshots_queue[0]
-        del screenshots_cache[top[0]][top[1]]
-        screenshots_queue.pop(0)
-        
-    return screenshots_cache[name][id]
+    return image
 
 def compute_ssim_from_pair(target, ref, id_target, id_ref):
     image_ref = load_screenshot(ref, id_ref)
