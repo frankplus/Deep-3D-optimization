@@ -5,6 +5,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import Pipeline
 import math
+from random import randint
 
 with open('experiment_results.txt') as json_file:
     data = json.load(json_file)
@@ -14,7 +15,7 @@ def test_predictor():
     x = list(map(lambda x: [x['average_ssim'], x['average_frame_vertex_count']], data))
     y = list(map(lambda x: x['rating'], data))
 
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state = 42)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state = randint(0,10000))
 
     model = Pipeline([('poly', PolynomialFeatures(degree=2)),
                     ('linear', LinearRegression(fit_intercept=True))])

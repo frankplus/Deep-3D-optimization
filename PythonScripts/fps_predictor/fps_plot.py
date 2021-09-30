@@ -36,7 +36,8 @@ def get_lod_stats(lod_name):
             "triangle_count": int(parsed["triangle_count"]),
             "vertex_count": int(parsed["vertex_count"]),
             "textures_count": int(parsed["textures_count"]),
-            "fps": float(parsed["fps"])
+            "fps": float(parsed["fps"]),
+            "mesh_vertex_count": int(parsed["mesh_vertex_count"])
         }
 
         stats.append(selected_stats)
@@ -92,7 +93,7 @@ def show_fps_plots():
     plt.show()
 
 def print_averages():
-    keys = ["fps", "triangle_count", "vertex_count"]
+    keys = ["fps", "triangle_count", "vertex_count", "mesh_vertex_count"]
     for key in keys:
         for lod in lod_names:
             stats = get_lod_stats(lod)

@@ -126,7 +126,7 @@ def compute_cnn_features(cnn_session, projections):
     outputs = cnn_session.run(None, {'input': batch.astype(np.float32)})
     return outputs[0][0]
 
-def get_target_sample(logs, curr_timestamp, time_interval = 1000):
+def get_target_sample(logs, curr_timestamp, time_interval = 500):
     next_timestamp = curr_timestamp + time_interval
     for sample in logs:
         if sample['Timestamp'] >= next_timestamp:
