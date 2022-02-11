@@ -106,7 +106,7 @@ def vertex_fps_plot():
         stats = get_lod_stats(lod)
         vertex_count = list(map(lambda x: math.log2(x["vertex_count"]), stats))
         fps = list(map(lambda x: x["fps"], stats))
-        plt.scatter(vertex_count, fps, s=4)
+        plt.scatter(vertex_count, fps, s=4, c='green')
     plt.xlabel("log2(vertex count)")
     plt.ylabel("fps")
     plt.show()

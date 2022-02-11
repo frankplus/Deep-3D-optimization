@@ -1,6 +1,7 @@
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.patches as mpatches
 
 with open("dataset.json", 'r') as f:
     dataset = json.load(f)
@@ -39,12 +40,14 @@ def plot_fps_vs_ssim():
     plt.show()
 
 def plot_ssim_vs_distance():
-    for lod in lod_names:
+    for i,lod in enumerate(lod_names):
         x_axis = [np.linalg.norm(x) for x in dataset["positions"]]
         y_axis = select_ssim_data(lod)
-        plt.scatter(x_axis, y_axis)
+        lod_level = {1: "high", 2: "medium", 3:"low"}
+        plt.scatter(x_axis, y_axis, label=f"LOD {lod_level[i+1]}")
     plt.xlabel("distance from center")
     plt.ylabel("ssim")
+    plt.legend()
     plt.show()
 
 show_2d_ssim_plot()

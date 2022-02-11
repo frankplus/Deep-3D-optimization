@@ -126,22 +126,28 @@ def compute_cnn_features(cnn_session, projections):
     outputs = cnn_session.run(None, {'input': batch.astype(np.float32)})
     return outputs[0][0]
 
-def get_target_sample(logs, curr_timestamp, time_interval = 500):
+def get_target_sample(logs, curr_timestamp, time_interval = 100):
     next_timestamp = curr_timestamp + time_interval
     for sample in logs:
         if sample['Timestamp'] >= next_timestamp:
             return sample
     return None
 
-def calculate_average_indices(logs, mesh_vertex_count, cnn_features, ffn_session):
+def calculate_average_indices(logs, mesh_vertex_count, cnn_features, ffn_session, dynamic_ssim=True):
     output_sequence = list()
     sum = 0
     for sample in logs:
-        target_sample = get_target_sample(logs, sample['Timestamp'])
-        if not target_sample:
-            continue
+        if dynamic_ssim:
+            target_sample = get_target_sample(logs, sample['Timestamp'])
+            if not target_sample:
+                continue
         ref_position = np.array(sample['Position'])
-        target_position = np.array(target_sample['Position'])
+
+        if dynamic_ssim:
+            target_position = np.array(target_sample['Position'])
+        else:
+            target_position = ref_position
+
         norm_mesh_vertex_count = [math.log2(mesh_vertex_count) / 30.0]
         ffn_input = np.concatenate((target_position, ref_position, norm_mesh_vertex_count, cnn_features))
         ffn_input = np.expand_dims(ffn_input, 0)
@@ -176,7 +182,7 @@ for file in files:
         proj = get_projections_by_displayid(data['DisplayID'], all_projections)
         cnn_features = compute_cnn_features(cnnsession, proj)
 
-        average_indices = calculate_average_indices(logs, vertex_count_map[data['DisplayID']], cnn_features, ffnsession)
+        average_indices = calculate_average_indices(logs, vertex_count_map[data['DisplayID']], cnn_features, ffnsession, dynamic_ssim=True)
         average_indices = average_indices.astype(float)
         results = {
                     'average_ssim': average_indices[0], 
