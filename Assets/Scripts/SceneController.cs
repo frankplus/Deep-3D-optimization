@@ -20,7 +20,7 @@ public class SceneController : MonoBehaviour
 	static SceneController _instance;
 	public static SceneController Settings => _instance;
 
-	SurfaceCountPlaneProjection[] _planes = new SurfaceCountPlaneProjection[3];
+	public SurfaceCountPlaneProjection[] _planes = new SurfaceCountPlaneProjection[3];
 	string _savePath;
 
     private void Awake()

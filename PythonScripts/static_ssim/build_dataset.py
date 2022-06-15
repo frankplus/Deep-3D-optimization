@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import json
 
 log_dir = "../../logData/"
-screenshots_path = "../../screenshots/"
-ref_dir = "LacockAbbey02"
+screenshots_path = "../../screenshots"
+ref_dir = ""
 
 # list all directories inside screenshots_path
 dirpath, dirnames, filenames = next(os.walk(screenshots_path))
@@ -62,7 +62,7 @@ for dir in dirnames:
     data[dir] = generate_lod_data(dir)
 
 # read positions
-with open("positions.txt", 'r') as f:
+with open("../positions.txt", 'r') as f:
     positions = list()
     for line in f.readlines():
         pos = [float(x) for x in line.split()[:3]]

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 # read positions
 def generate_data(train_window = 12, train_set = 0.8):
-    with open("positions_walk.txt", 'r') as f:
+    with open("../positions_walk.txt", 'r') as f:
         positions = list()
         for line in f.readlines():
             pos = [float(x) for x in line.split()[:3]]

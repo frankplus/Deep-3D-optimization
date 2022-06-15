@@ -12,7 +12,7 @@ EPOCHS = 100
 
 class SsimDataset(Dataset):
     def __init__(self):
-        with open("dataset.json", 'r') as f:
+        with open("../dynamic_ssim_multimodel/dataset.json", 'r') as f:
             data = json.load(f)
         self.dataset = list()
         for sample in data["samples"]:
