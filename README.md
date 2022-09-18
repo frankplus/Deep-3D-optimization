@@ -1,5 +1,5 @@
 # Deep 3D Optimization
-*Elena Camuffo, Federica Battisti, Francesco Pham, Simone Milani - EUVIP 2022 [[paper](https://github.com/elenacamuffo/elenacamuffo.github.io/tree/main/download)]*
+*Elena Camuffo, Federica Battisti, Francesco Pham, Simone Milani - EUVIP 2022 [[paper](EUVIP2022.pdf)]*
 
 ![pipeline_my](documentation/images/deep_3d_optimization_pipeline_EUVIP_2022.png)
 
