@@ -1,7 +1,7 @@
 # Deep 3D Optimization
 *Elena Camuffo, Federica Battisti, Francesco Pham, Simone Milani - EUVIP 2022 [[paper](https://github.com/elenacamuffo/elenacamuffo.github.io/tree/main/download)]*
 
-![pipeline_my](https://user-images.githubusercontent.com/63043735/174303186-6cc17e57-3c83-4a2a-835b-bf433db31b89.png)
+![pipeline_my](documentation/images/deep_3d_optimization_pipeline_EUVIP_2022.png)
 
 ## Abstract 
 The growing diffusion of immersive and interactive applications is posing new challenges in the multimedia processing chain. When dealing with AR and VR applications, the most relevant aspects to consider are the (1) **quality** of the visualized 3D objects and (2) the **fluidity** in the visualization in case the user is moving in the environment. In this framework, we propose a deep learning based approach that estimates the optimal model parameters to be used in relation to the viewer’s movement and the model characteristics and quality. The performed tests show the effectiveness of the proposed approach.
